@@ -1,0 +1,37 @@
+# encoding: UTF-8
+
+# 默认空值
+EMPTY_STRING = ''
+EMPTY_UNICODE = u''
+EMPTY_INT = 0
+EMPTY_FLOAT = 0.0
+
+# 方向常量
+DIRECTION_NONE = u'无方向'
+DIRECTION_LONG = u'多'
+DIRECTION_SHORT = u'空'
+DIRECTION_UNKNOWN = u'未知'
+DIRECTION_NET = u'净'
+DIRECTION_SELL = u'卖出'      # IB接口
+
+# 开平常量
+OFFSET_NONE = u'无开平'
+OFFSET_OPEN = u'开仓'
+OFFSET_CLOSE = u'平仓'
+OFFSET_CLOSETODAY = u'平今'
+OFFSET_CLOSEYESTERDAY = u'平昨'
+OFFSET_UNKNOWN = u'未知'
+
+# 状态常量
+STATUS_NOTTRADED = u'未成交'
+STATUS_PARTTRADED = u'部分成交'
+STATUS_ALLTRADED = u'全部成交'
+STATUS_CANCELLED = u'已撤销'
+STATUS_UNKNOWN = u'未知'
+
+# log字典常量
+LOG_SYMBOL = u'标的'
+LOG_DIRECTION = u'方向'
+LOG_OFFSET = u'开平'
+LOG_VOLUME = u'成交量'
+LOG_PRICE = u'成交价'
