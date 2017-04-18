@@ -337,6 +337,12 @@ class MainWindow(QtGui.QMainWindow):
         # self.mainEngine.qryPosition(self, gatewayName)
 
         # try:
+        try:
+            self.widgetDict['analysisPeriod'].show()
+        except KeyError:
+            self.widgetDict['analysisPeriod'] = PeriodSelection(self.analysisEngine)
+            self.widgetDict['analysisPeriod'].show()
+
         endStr = datetime.now().strftime('%Y%m%d')
         if datetime.weekday(datetime.now()) == 0:
             startStr = (datetime.now()-timedelta(days=3)).strftime('%Y%m%d')
@@ -459,7 +465,6 @@ class AboutWidget(QtGui.QDialog):
         vbox.addWidget(label)
 
         self.setLayout(vbox)
-
 
 def main():
     # testAnalysis = MainWindow(mainEngine, eventEngine)
