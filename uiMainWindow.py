@@ -7,6 +7,7 @@ from ctaAlgo.uiCtaWidget import CtaEngineManager
 from datetime import datetime,timedelta
 from analysis.postAnalysis import PostAnalysis
 from analysis.uiNetCurve import NetCurveManager
+from analysis.uiPeriodSelection import PeriodSelection
 # from dataRecorder.uiDrWidget import DrEngineManager
 from riskManager.uiRmWidget import RmEngineManager
 
@@ -343,27 +344,27 @@ class MainWindow(QtGui.QMainWindow):
             self.widgetDict['analysisPeriod'] = PeriodSelection(self.analysisEngine)
             self.widgetDict['analysisPeriod'].show()
 
-        endStr = datetime.now().strftime('%Y%m%d')
-        if datetime.weekday(datetime.now()) == 0:
-            startStr = (datetime.now()-timedelta(days=3)).strftime('%Y%m%d')
-        else:
-            startStr = (datetime.now()-timedelta(days=1)).strftime('%Y%m%d')
-
-        self.analysisEngine = PostAnalysis(startStr,endStr)
-        self.analysisEngine.loadLog()
-
-        self.mainEngine.dbConnect()
-        lastTickData = self.mainEngine.dbQuery('MTS_lastTick_DB',"20170331",None)
-        self.analysisEngine.loadTradeHolding(lastTickData)
+        # endStr = datetime.now().strftime('%Y%m%d')
+        # if datetime.weekday(datetime.now()) == 0:
+        #     startStr = (datetime.now()-timedelta(days=3)).strftime('%Y%m%d')
+        # else:
+        #     startStr = (datetime.now()-timedelta(days=1)).strftime('%Y%m%d')
         #
-        # self.analysisEngine.writeStatement()
+        # self.analysisEngine = PostAnalysis(startStr,endStr)
+        # self.analysisEngine.loadLog()
         #
-        # self.analysisEngine.calculateNetChange()
-
-        QtGui.QMessageBox.information(self,u'Information',u'基础数据分析完成!')
-
-        # except Exception as e:
-        #     raise e
+        # self.mainEngine.dbConnect()
+        # lastTickData = self.mainEngine.dbQuery('MTS_lastTick_DB',"20170331",None)
+        # self.analysisEngine.loadTradeHolding(lastTickData)
+        # #
+        # # self.analysisEngine.writeStatement()
+        # #
+        # # self.analysisEngine.calculateNetChange()
+        #
+        # QtGui.QMessageBox.information(self,u'Information',u'基础数据分析完成!')
+        #
+        # # except Exception as e:
+        # #     raise e
 	#----------------------------------------------------------------------
     def openRm(self):
         """打开组件"""
