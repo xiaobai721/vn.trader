@@ -167,9 +167,9 @@ class showResult(QtGui.QWidget):
 if __name__ == '__main__':
     app = 0
     app = QtGui.QApplication(sys.argv)
-#    checkList = showList()
-#    checkList.show()
+    checkList = showList()
+    checkList.show()
 #    checkList.updateList(str(1111))
-    mywindow = MyWindow() 
-    mywindow.show()
+#     mywindow = MyWindow()
+#     mywindow.show()
     app.exec_()
