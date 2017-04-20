@@ -5,9 +5,10 @@ import psutil
 from uiBasicWidget import *
 from ctaAlgo.uiCtaWidget import CtaEngineManager
 from datetime import datetime,timedelta
-from analysis.postAnalysis import PostAnalysis
-from analysis.uiNetCurve import NetCurveManager
-from analysis.uiPeriodSelection import PeriodSelection
+# from analysis.postAnalysis import PostAnalysis
+# from analysis.analysisEngine import *
+# from analysis.uiNetCurve import NetCurveManager
+from analysis.uiPeriodSelection import EventSelection
 # from dataRecorder.uiDrWidget import DrEngineManager
 from riskManager.uiRmWidget import RmEngineManager
 
@@ -119,9 +120,9 @@ class MainWindow(QtGui.QMainWindow):
         
         analysisAction = QtGui.QAction(u'基础分析', self)
         analysisAction.triggered.connect(self.analysis)
-
-        netCurveAction = QtGui.QAction(u'净值显示', self)
-        netCurveAction.triggered.connect(self.openNetCurve)
+        #
+        # netCurveAction = QtGui.QAction(u'净值显示', self)
+        # netCurveAction.triggered.connect(self.openNetCurve)
 
         drAction = QtGui.QAction(u'行情数据记录', self)
         drAction.triggered.connect(self.openDr)
@@ -175,7 +176,7 @@ class MainWindow(QtGui.QMainWindow):
         functionMenu.addAction(contractAction)
         functionMenu.addAction(drAction)
         functionMenu.addAction(analysisAction)
-        functionMenu.addAction(netCurveAction)
+        # functionMenu.addAction(netCurveAction)
         functionMenu.addAction(rmAction)
         # 算法相关
         algoMenu = menubar.addMenu(u'算法')
@@ -311,13 +312,13 @@ class MainWindow(QtGui.QMainWindow):
             self.widgetDict['ctaM'].showMaximized()
 
     #----------------------------------------------------------------------
-    def openNetCurve(self):
-        """打开净值显示组件"""
-        try:
-            self.widgetDict['netCurve'].showMaximized()
-        except KeyError:
-            self.widgetDict['netCurve'] = NetCurveManager(self.analysisEngine)
-            self.widgetDict['netCurve'].showMaximized()
+    # def openNetCurve(self):
+    #     """打开净值显示组件"""
+    #     try:
+    #         self.widgetDict['netCurve'].showMaximized()
+    #     except KeyError:
+    #         self.widgetDict['netCurve'] = NetCurveManager(self.analysisEngine)
+    #         self.widgetDict['netCurve'].showMaximized()
             
     #----------------------------------------------------------------------
     def openDr(self):
@@ -333,15 +334,15 @@ class MainWindow(QtGui.QMainWindow):
     def analysis(self):
         """拆分日志、统计盈亏"""
         # 系统设计已经包含连续查询机制，目前需要处理相应事件即可
-        # gatewayName = 'CTP'
-        # self.mainEngine.qryAccont(self, gatewayName)
-        # self.mainEngine.qryPosition(self, gatewayName)
-
-        # try:
+    #     # gatewayName = 'CTP'
+    #     # self.mainEngine.qryAccont(self, gatewayName)
+    #     # self.mainEngine.qryPosition(self, gatewayName)
+    #
+    #     # try:
         try:
             self.widgetDict['analysisPeriod'].show()
         except KeyError:
-            self.widgetDict['analysisPeriod'] = PeriodSelection(self.analysisEngine)
+            self.widgetDict['analysisPeriod'] = EventSelection(self.mainEngine,self.mainEngine.analysisEngine)
             self.widgetDict['analysisPeriod'].show()
 
         # endStr = datetime.now().strftime('%Y%m%d')

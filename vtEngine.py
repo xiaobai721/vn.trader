@@ -13,7 +13,7 @@ from vtFunction import loadMongoSetting
 from ctaAlgo.ctaEngine import CtaEngine
 # from dataRecorder.drEngine import DrEngine
 from riskManager.rmEngine import RmEngine
-
+from analysis.postAnalysis import PostAnalysis
 
 
 ########################################################################
@@ -41,7 +41,7 @@ class MainEngine(object):
         self.ctaEngine = CtaEngine(self, self.eventEngine)
 
         self.rmEngine = RmEngine(self, self.eventEngine)
-        
+        self.analysisEngine = PostAnalysis()
     #----------------------------------------------------------------------
     def initGateway(self):
         """初始化接口对象"""
@@ -367,5 +367,3 @@ class DataEngine(object):
         self.eventEngine.register(EVENT_CONTRACT, self.updateContract)
         self.eventEngine.register(EVENT_ORDER, self.updateOrder)
         
-    
-    

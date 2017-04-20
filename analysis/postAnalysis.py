@@ -26,21 +26,24 @@ from vtConstant import *
 class PostAnalysis(object):
     """日志拆分分析"""
 
-    ctaEngineLogFile = os.getcwd() + '/ctaLogFile'
+    ctaEngineLogFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\temp'
     ctaEngineTradeCacheFile = os.getcwd() + '/tradeCache'
     statementFile = os.getcwd() + '/statement'
 
     #---------------------------------------------------------------------
-    def __init__(self,startTime,endTime):
+    def __init__(self):
         """初始化"""
+        # startTime = '20170419'
+        # endTime = '20170419'
         # 当前日期
         self.today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         # 单策略log字典
         self.singleStrategyLog = {}
-        # 分析起始时间
-        self.startTime = startTime+'-210000'
+        # # 分析起始时间
+        # self.startTime = endTime+'-210000'
         # 分析结束时间
-        self.endTime = endTime+'-090000'
+        # self.endTime = endTime+'-090000'
+        # self.startTime = self.endTime
         # 捕捉字符串
         self.str1 = u'成交回报'
         self.str2 = u'标的'
@@ -79,79 +82,82 @@ class PostAnalysis(object):
             self.symbolInformation[line[0]] = line[1:]
 
     #---------------------------------------------------------------------
-    def loadLog(self):
+    def loadLog(self,dirname):
         """加载log文件"""
-        dateList = os.listdir(self.ctaEngineLogFile)
-        startStr = self.startTime
-        endStr = self.endTime
-
+        # dateList = os.listdir(self.ctaEngineLogFile)
+        # self.endTime = endTime + '-090000'
+        # self.startTime = self.endTime
+        # startStr = self.startTime
+        # endStr = self.endTime
+        d = dirname
         self.tradeList = OrderedDict()
-        self.sLogdir = ['/strategyInstanceLog','/AccountInstanceLog','/ContractInstanceLog']
-        self.sTradedir = ['/strategyInstanceTradeList','/AccountInstanceTradeList','/ContractInstanceTradeList']
-        self.sCtaFile = ['/ctaLog','/ctaLog','/ctaLog']
-        for i in range(3):
-            for d in dateList:
-                if d >= startStr and d <= endStr:
+        self.endTime = dirname
+        self.sLogdir = ['\AccountInstanceLog','\ContractInstanceLog']
+        self.sTradedir = ['\AccountInstanceTradeList','\ContractInstanceTradeList']
+        self.sCtaFile = ['\ctaLog2','\ctaLog2']
+        for i in range(2):
+            # for d in dateList:
+                # if d >= startStr and d <= endStr:
                     # 创建策略实例log存储文件夹
-                    sLogPath = self.ctaEngineLogFile+'/'+d+self.sLogdir[i]
-                    if not os.path.exists(sLogPath):
-                        os.makedirs(sLogPath)
-                    # 创建策略实例交易记录文件夹
-                    sTradePath = self.ctaEngineLogFile+'/'+d+self.sTradedir[i]
-                    if not os.path.exists(sTradePath):
-                        os.makedirs(sTradePath)
+            sLogPath = self.ctaEngineLogFile+'\\'+d+self.sLogdir[i]
+            if not os.path.exists(sLogPath):
+                os.makedirs(sLogPath)
+            # 创建策略实例交易记录文件夹
+            sTradePath = self.ctaEngineLogFile+'\\'+d+self.sTradedir[i]
+            if not os.path.exists(sTradePath):
+                os.makedirs(sTradePath)
 
-                    with open(self.ctaEngineLogFile+'/'+d+self.sCtaFile[i]) as f:
-                        nt = 0
-                        for line in f:
-                            try:
-                                # 加入AccountName
-                                si = line.split(':')[4]
-                                an = line.split(':')[3]
-                            except Exception as e:
-                                continue
+            with open(self.ctaEngineLogFile+'\\'+d+self.sCtaFile[i]) as f:
+                nt = 0
+                for line in f:
+                    try:
+                        # 加入AccountName
+                        si = line.split(':')[4]
+                        an = line.split(':')[3]
+                    except Exception as e:
+                        continue
 
-                            if '_' in si and 'Dummy' not in si:
-                                    self.writeStrategyLog(line,d+self.sLogdir[i],si,'ab')
-                            else:
-                                self.writeStrategyLog(line,d,'system','ab')
+                    if '_' in si and 'Dummy' not in si:
+                            self.writeStrategyLog(line,d+self.sLogdir[i],si,'ab')
+                    else:
+                        self.writeStrategyLog(line,d,'system','ab')
 
-                            line = unicode(line,"utf-8")
-                            si = line.split(':')[4]
+                    line = unicode(line,"utf-8")
+                    si = line.split(':')[4]
 
-                            if si and u'Dummy' not in si:
-                                if si not in self.singleStrategyLog.keys():
-                                    self.singleStrategyLog[si] = {}
-                                    self.singleStrategyLog[si]['log'] = []
-                                    self.singleStrategyLog[si]['longPosition'] = []
-                                    self.singleStrategyLog[si]['shortPosition'] = []
-                                    self.singleStrategyLog[si]['longPrice'] = []
-                                    self.singleStrategyLog[si]['shortPrice'] = []
-                                    self.singleStrategyLog[si]['longProfit'] = []
-                                    self.singleStrategyLog[si]['shortProfit'] = []
+                    if si and u'Dummy' not in si:
+                        if si not in self.singleStrategyLog.keys():
+                            self.singleStrategyLog[si] = {}
+                            self.singleStrategyLog[si]['log'] = []
+                            self.singleStrategyLog[si]['longPosition'] = []
+                            self.singleStrategyLog[si]['shortPosition'] = []
+                            self.singleStrategyLog[si]['longPrice'] = []
+                            self.singleStrategyLog[si]['shortPrice'] = []
+                            self.singleStrategyLog[si]['longProfit'] = []
+                            self.singleStrategyLog[si]['shortProfit'] = []
 
-                                self.singleStrategyLog[si]['log'].append(line)
+                        self.singleStrategyLog[si]['log'].append(line)
 
-                                # 成交回报
-                                if self.str1 in line and self.str3 not in line:
-                                    nt = nt + 1
-                                    if nt == 1:
-                                        self.tradeList[self.sLogdir[i][1:]] = [
-                                            [u'时间', u'账户', u'策略实例', u'策略类', u'标的', u'方向', u'开平', u'成交量', u'成交价']]
-                                    temp = []
-                                    for strc in line.split(','):
-                                        if self.str1 in strc:
-                                            temp.append(strc[:19]) #strc[:8]
-                                            temp.extend([strc.split(':')[j] for j in range(3,5)])
-                                            temp.append(temp[2].split('_', 1)[0])
-                                        else:
-                                            temp.append(strc.split('--')[-1].strip())
-                                    self.writeCsv(sTradePath+'/'+si,temp,'ab')
-                                    self.tradeList[self.sLogdir[i][1:]].append(temp)
-                            else:
-                                pass
-                    # self.writePosFile(d,self.tradeList)
-                    self.writeTradeList(d,self.tradeList) #ctaTradeList.xls
+                        # 成交回报
+                        if self.str1 in line and self.str3 not in line:
+                            nt = nt + 1
+                            if nt == 1:
+                                self.tradeList[self.sLogdir[i][1:]] = [
+                                    [u'时间', u'账户', u'策略实例', u'策略类', u'标的', u'方向', u'开平', u'成交量', u'成交价']]
+                            temp = []
+                            for strc in line.split(','):
+                                if self.str1 in strc:
+                                    temp.append(strc[:19]) #strc[:8]
+                                    temp.extend([strc.split(':')[j] for j in range(3,5)])
+                                    temp.append(temp[2].split('_', 1)[0])
+                                else:
+                                    temp.append(strc.split('--')[-1].strip())
+                            self.writeCsv(sTradePath+'/'+si,temp,'ab')
+                            self.tradeList[self.sLogdir[i][1:]].append(temp)
+                    else:
+                        pass
+            # self.writePosFile(d,self.tradeList)
+            self.writeTradeList(d,self.tradeList) #ctaTradeList.xls
     #----------------------------------------------------------------------
     def writePosFile(self,date,posHolding):
         # for line in range(len(posHolding)):
@@ -200,32 +206,32 @@ class PostAnalysis(object):
             return
 
     # ----------------------------------------------------------------------
-    def clearPosHisFile(self,id):
-        """清理标的历史持仓信息"""
-        d1 = datetime(2017,4,1)
-        d2 = datetime(2017,4,10)
-        posPath = self.ctaEngineLogFile + '/ctaPosFile' + '//' + id + '.txt'
-        personaltype = np.dtype({'names': ['id', 'date', 'TLong', 'TShort', 'YLong', 'YShort'],
-                                 'formats': ['S40', 'S20', 'f', 'f', 'f', 'f']})
-        curr_day = d1
-        data = []
-        if os.path.exists(posPath):
-            with open(posPath,'r') as f:
-                OFile = np.loadtxt(f,dtype = personaltype,delimiter=",")
-                if OFile.shape:
-                    OFile = OFile.tolist()
-                    while (d2 - curr_day).days > 0:
-                        for line in OFile:
-                            if line[1][:9] == curr_day.strftime('%Y%m%d'):
-                                OFile.remove(line)
-                        curr_day = curr_day + timedelta(days = 1)
-                # data_OFile = OFile
-            for i in range(len(OFile)):
-                s = ','.join([str(x) for x in OFile[i]])
-                data.append(s)
-            with open(posPath, 'w') as f:
-                # data = [line + '\n' for line in data]
-                f.writelines(data)
+    # def clearPosHisFile(self,id):
+    #     """清理标的历史持仓信息"""
+    #     d1 = datetime(2017,4,1)
+    #     d2 = datetime(2017,4,10)
+    #     posPath = self.ctaEngineLogFile + '/ctaPosFile' + '//' + id + '.txt'
+    #     personaltype = np.dtype({'names': ['id', 'date', 'TLong', 'TShort', 'YLong', 'YShort'],
+    #                              'formats': ['S40', 'S20', 'f', 'f', 'f', 'f']})
+    #     curr_day = d1
+    #     data = []
+    #     if os.path.exists(posPath):
+    #         with open(posPath,'r') as f:
+    #             OFile = np.loadtxt(f,dtype = personaltype,delimiter=",")
+    #             if OFile.shape:
+    #                 OFile = OFile.tolist()
+    #                 while (d2 - curr_day).days > 0:
+    #                     for line in OFile:
+    #                         if line[1][:9] == curr_day.strftime('%Y%m%d'):
+    #                             OFile.remove(line)
+    #                     curr_day = curr_day + timedelta(days = 1)
+    #             # data_OFile = OFile
+    #         for i in range(len(OFile)):
+    #             s = ','.join([str(x) for x in OFile[i]])
+    #             data.append(s)
+    #         with open(posPath, 'w') as f:
+    #             # data = [line + '\n' for line in data]
+    #             f.writelines(data)
 
     # ----------------------------------------------------------------------
     def loadPosHolding(self,id):
@@ -282,13 +288,15 @@ class PostAnalysis(object):
                 if unicode('开仓',"utf8") in ail[line][6]:
                     temp[2] = float(temp[2]) + float(ail[line][7])
                 elif unicode('平',"utf8") in ail[line][6]:
-                    temp[2] = float(temp[2]) - float(ail[line][7])
+                    continue
+                    # temp[2] = float(temp[2]) - float(ail[line][7])
 
             elif unicode('空',"utf8") in ail[line][5]:
                 if unicode('开仓',"utf8") in ail[line][6]:
                     temp[3] = float(temp[3]) + float(ail[line][7])
                 elif unicode('平',"utf8") in ail[line][6]:
-                    temp[3] = float(temp[3]) - float(ail[line][7])
+                    continue
+                    # temp[3] = float(temp[3]) - float(ail[line][7])
 
             symbol = ''.join(re.findall(r'[a-z]', ail[line][4].lower()))
             lastPriceData = self.qryLastTick(LTKdata,symbol)
@@ -305,7 +313,7 @@ class PostAnalysis(object):
     def qryLastTick(self,pricedata,conid):
         try:
             for i in pricedata:
-                if i['vtSymbol'] == unicode('a00',"utf8"):
+                if i['vtSymbol'] == unicode('a00',"utf8"):  #a00为测试vt，后期根据需要修改
                     return float(i['lastPrice'])
                 else:
                     continue

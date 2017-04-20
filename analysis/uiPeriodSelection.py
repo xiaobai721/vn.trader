@@ -8,66 +8,90 @@ from uiBasicWidget import QtGui, QtCore, BasicCell
 from eventEngine import *
 import logging, os, sys
 from datetime import datetime
+from analysis.uiNetCurve import NetCurveManager
 
-class PeriodSelection(QtGui.QWidget):
-    """周期选择"""
+class EventSelection(QtGui.QWidget):
+    """分析功能选择"""
 
-    def __init__(self, parent = None):
+    def __init__(self, mainEngine,analysisEngine,parent = None):
         # QtGui.QWidget.__init__(self)  # 调用父类初始化方法
         # self.__analysisEngine = analysisEngine
-        super(PeriodSelection, self).__init__()
+        super(EventSelection, self).__init__()
+        self.mainEngine = mainEngine
+        self.analysisEngine = analysisEngine
         self.initUi()
-        # gridlayout = QtGui.QGridLayout()  # 创建布局组件
+        self.widgetDict = {}  # 用来保存子窗口的字典
+
 
     def initUi(self):
-        self.setWindowTitle('PeriodSelection')  # 设置窗口标题
+        self.setWindowTitle('EventSelection')  # 设置窗口标题
 
         #设置组件
-        labelStart = QtGui.QLabel(u'起始时间')
-        labelEnd = QtGui.QLabel(u'终止时间')
+        # labelStart = QtGui.QLabel(u'起始时间')
+        # labelEnd = QtGui.QLabel(u'终止时间')
+        #
+        # self.editStart = QtGui.QLineEdit()
+        # self.editEnd = QtGui.QLineEdit()
 
-        self.editStart = QtGui.QLineEdit()
-        self.editEnd = QtGui.QLineEdit()
+        buttonData = QtGui.QPushButton(u'数据统计')
+        buttonNet = QtGui.QPushButton(u'净值分析')
 
-        buttonConfirm = QtGui.QPushButton(u'确认')
-        buttonCancel = QtGui.QPushButton(u'取消')
-
-        buttonConfirm.clicked.connect(self.confirm)
-        buttonCancel.clicked.connect(self.close)
+        buttonData.clicked.connect(self.data)
+        buttonNet.clicked.connect(self.net)
 
         # 设置布局
         buttonHBox = QtGui.QHBoxLayout()
         buttonHBox.addStretch()
-        buttonHBox.addWidget(buttonConfirm)
-        buttonHBox.addWidget(buttonCancel)
+        buttonHBox.addWidget(buttonData)
+        buttonHBox.addWidget(buttonNet)
 
-        self.editStart.setMinimumWidth(200)
+        # self.editStart.setMinimumWidth(200)
 
         grid = QtGui.QGridLayout()
-        grid.addWidget(labelStart, 0, 0)
-        grid.addWidget(labelEnd, 1, 0)
-        grid.addWidget(self.editStart, 0, 1)
-        grid.addWidget(self.editEnd, 1, 1)
-        grid.addLayout(buttonHBox, 2, 0, 1, 2)
+        # grid.addWidget(labelStart, 0, 0)
+        # grid.addWidget(labelEnd, 1, 0)
+        # grid.addWidget(self.editStart, 0, 1)
+        # grid.addWidget(self.editEnd, 1, 1)
+        grid.addLayout(buttonHBox, 0, 0, 1, 2)
         self.setLayout(grid)
 
-    def confirm(self):
-        print 'OK'
-        startdate = str(self.editStart.text())
-        enddate = str(self.editEnd.text())
+    def data(self):
+        print 'data'
+        LogFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\temp'
+        dirName = []
+        try:
+            for i in os.listdir(LogFile):
+                # i = i[:8]
+                if i[:8].isdigit():
+                    dirName.append(i)
+            dirName.sort()
+            for j in dirName:
+                self.analysisEngine.loadLog(j)
+                self.mainEngine.dbConnect()
+                lastTickData = self.mainEngine.dbQuery('MTS_lastTick_DB',"20170331",None)
+                self.analysisEngine.loadTradeHolding(lastTickData)
+            QtGui.QMessageBox.information(self, u'Information', u'基础数据分析完成!')
+        except Exception, e:
+            print e
 
         self.close()
 
-    def closeEvent(self, event):
-        """关闭事件处理"""
-        print 'Cancel'
+    def net(self):
+        print 'net'
+        try:
+            self.widgetDict['netCurve'].showMaximized()
+        except KeyError:
+            self.widgetDict['netCurve'] = NetCurveManager(self.analysisEngine)
+            self.widgetDict['netCurve'].showMaximized()
+
+        self.close()
         # event.accept()
 
 
 def main():
     app = 0
     app = QtGui.QApplication(sys.argv)
-    mywindow = PeriodSelection()
+    mywindow = EventSelection()
     mywindow.show()
     app.exec_()
 
