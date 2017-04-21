@@ -56,36 +56,35 @@ class EventSelection(QtGui.QWidget):
         self.setLayout(grid)
 
     def data(self):
-        print 'data'
+        # print 'data'
         LogFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\temp'
         dirName = []
-        try:
-            for i in os.listdir(LogFile):
-                # i = i[:8]
-                if i[:8].isdigit():
-                    dirName.append(i)
-            dirName.sort()
-            for j in dirName:
+        for i in os.listdir(LogFile):
+            if i[:8].isdigit():
+                dirName.append(i)
+        dirName.sort()
+        for j in dirName:
+            try:
                 self.analysisEngine.loadLog(j)
                 self.mainEngine.dbConnect()
                 lastTickData = self.mainEngine.dbQuery('MTS_lastTick_DB',"20170331",None)
                 self.analysisEngine.loadTradeHolding(lastTickData)
-            QtGui.QMessageBox.information(self, u'Information', u'基础数据分析完成!')
-        except Exception, e:
-            print e
+            except Exception, e:
+                print e
+                continue
+        QtGui.QMessageBox.information(self, u'Information', u'基础数据分析完成!')
 
-        self.close()
+        # self.close()
 
     def net(self):
-        print 'net'
+        # print 'net'
         try:
             self.widgetDict['netCurve'].showMaximized()
         except KeyError:
             self.widgetDict['netCurve'] = NetCurveManager(self.analysisEngine)
             self.widgetDict['netCurve'].showMaximized()
 
-        self.close()
-        # event.accept()
+        # self.close()
 
 
 def main():

@@ -165,7 +165,7 @@ class PostAnalysis(object):
         try:
             with open(posPath,'a') as f:
                 s = ','.join([str(x) for x in posHolding])
-                f.write('\n' + s)
+                f.write( s + '\n')
         except Exception as e:
             print e
 
@@ -238,8 +238,11 @@ class PostAnalysis(object):
         """载入当前id的前一日持仓信息"""
         personaltype = np.dtype({'names': ['id','date', 'Long', 'Short','lastPrice','profit'],
                                'formats': ['S40','S20','f', 'f','f','f']})
+
+        if not os.path.exists(self.ctaEngineLogFile+'\ctaPosFile'):
+            os.makedirs(self.ctaEngineLogFile+'\ctaPosFile')
         try:
-            with open(self.ctaEngineLogFile+'/ctaPosFile/'+id + '.txt','rb') as f:
+            with open(self.ctaEngineLogFile+'\ctaPosFile' + '\''+id + '.txt','rb') as f:
                 POSFile = np.loadtxt(f, dtype=personaltype, delimiter=",")
                 f.close()
         except Exception as e:
@@ -470,13 +473,13 @@ class PostAnalysis(object):
         return e
 
     #----------------------------------------------------------------------
-    # def genNetData(self,path):
-    #     """生成净值曲线数据"""
-    #     if os.path.isfile(path):
-    #         netDict = self.sumNet([path])
-    #     else:
-    #         netDict = self.sumNet(pathIter(path))
-    #     return netDict  # netDict以日期为key，净值为value的字典，不包含任何策略信息
+    def genNetData(self,path):
+        """生成净值曲线数据"""
+        if os.path.isfile(path):
+            netDict = self.sumNet([path])
+        else:
+            netDict = self.sumNet(self.pathIter(path))
+        return netDict  # netDict以日期为key，净值为value的字典，不包含任何策略信息
 
     #----------------------------------------------------------------------
     def pathIter(self,path):
