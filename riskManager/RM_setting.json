@@ -1,8 +1,9 @@
 {
-    "orderFlowClear": 1, 
-    "workingOrderLimit": 20, 
-    "tradeLimit": 100, 
-    "orderSizeLimit": 10, 
+    "contractPositionLimit": 10, 
+    "accountMarginRatio": 0, 
+    "contractMarginRatio": 0.1, 
+    "strategyInstancePositionLimit": 10, 
+    "strategyInstanceOpenLimit": 10, 
     "active": true, 
-    "orderFlowLimit": 10
+    "tradeCountLimit": 101
 }
