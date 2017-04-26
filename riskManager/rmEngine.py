@@ -32,17 +32,19 @@ class RmEngine(object):
         self.eventEngine = eventEngine
         
         # 是否启动风控
-        self.active = {}
+        self.active = AutoValidation()
         # 账户保证金比例
-        self.accountMarginRatio = {}
-        self.acctMarginRatio = {}
+        self.accountMarginRatio = AutoValidation()
+        self.acctMarginRatio = AutoValidation()
         # 单日累计交易次数
-        self.tradeCountLimit = {}
-        self.tradeCount = {}
+        self.tradeCountLimit = AutoValidation()
+        self.tradeCount = AutoValidation()
         # 存储orderID
-        self.orderList = {}
+        self.orderList = AutoValidation()
         # 单标的持仓信息
-        self.posDict = {}
+        self.posDict = AutoValidation()
+        self.contractPositionLimit =  AutoValidation()
+
 
         self.loadSetting()
         self.registerEvent()
@@ -60,7 +62,8 @@ class RmEngine(object):
 
                 self.tradeCountLimit[i] = d[i]['tradeCountLimit']
 
-                self.contractPositionLimit[i] = d[i]['contractPositionLimit']
+                self.contractPositionLimit[i]['long'] = d[i]['contractPositionLimit']['long']
+                self.contractPositionLimit[i]['short'] = d[i]['contractPositionLimit']['short']
 
     #----------------------------------------------------------------------
     def registerEvent(self):
@@ -90,7 +93,10 @@ class RmEngine(object):
     def qryPosition(self,event):
         """查询单标的合约实例累计持仓"""
         pos= event.dict_['data']
-        self.posDict[pos.accountID][pos.vtSymbol] = pos.position
+        if pos.direction == DIRECTION_LONG:
+            self.posDict[pos.accountID][pos.vtSymbol]['Long'] = pos.position
+        elif pos.direction == DIRECTION_SHORT:
+            self.posDict[pos.accountID][pos.vtSymbol]['Short'] = pos.position
 
 
 
@@ -146,12 +152,20 @@ class RmEngine(object):
         if self.tradeCount[accountName] >= self.tradeCountLimit[accountName]:
             self.writeRiskLog(u'单日累计交易次数%s, 超过限制%s'
                               %(self.tradeCount, self.tradeCountLimit[accountName]))
-            return True
+
 
         # 单标的合约实例累计持仓的限制
-        if orderReq.vtSymbol in self.posDict[accountName] and self.posDict[accountName][orderReq.vtSymbol] >= self.contractPositionLimit[accountName]:
+        direction = EMPTY_STRING
+        if orderReq.direction == DIRECTION_LONG:
+            direction = 'long'
+        elif orderReq.direction == DIRECTION_SHORT:
+            direction = 'short'
+        else:
+            pass
+
+        if self.posDict[accountName][orderReq.vtSymbol][direction] != {} and self.posDict[accountName][orderReq.vtSymbol][direction] >= self.contractPositionLimit[accountName][direction]:
             self.writeRiskLog(u'标的合约累计交易次数%s, 超过限制%s'
-                              % (self.posDict[accountName][orderReq.vtSymbol], self.contractPositionLimit[accountName]))
+                            %(self.posDict[accountName][orderReq.vtSymbol][orderReq.direction], self.contractPositionLimit[accountName][direction]))
             return False
 
 
@@ -167,8 +181,11 @@ class RmEngine(object):
             self.writeRiskLog(u'风险管理功能停止')
 
 
-def main():
-    test = RmEngine()
-
-if __name__ == '__main__':
-    main()
+class AutoValidation(dict):
+    """Implementation of perl's AutoValidation feature."""
+    def __getitem__(self, item):
+        try:
+            return dict.__getitem__(self, item)
+        except KeyError:
+            value = self[item] = type(self)()
+            return value

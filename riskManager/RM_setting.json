@@ -1,7 +1,11 @@
 {
     "account1":
     {
-    "contractPositionLimit": 10,
+    "contractPositionLimit":
+    {
+        "long": 10,
+        "short": 10
+    },
     "accountMarginRatio": 30,
     "active": true,
     "tradeCountLimit": 100
@@ -9,7 +13,11 @@
 
     "account2":
     {
-    "contractPositionLimit": 10,
+    "contractPositionLimit":
+    {
+        "long": 10,
+        "short": 10
+    },
     "accountMarginRatio": 30,
     "active": true,
     "tradeCountLimit": 100
@@ -17,7 +25,11 @@
 
     "account3":
     {
-    "contractPositionLimit": 10,
+    "contractPositionLimit":
+    {
+        "long": 10,
+        "short": 10
+    },
     "accountMarginRatio": 30,
     "active": true,
     "tradeCountLimit": 100
