@@ -1,9 +1,25 @@
 {
-    "contractPositionLimit": 10, 
-    "accountMarginRatio": 0, 
-    "contractMarginRatio": 0.1, 
-    "strategyInstancePositionLimit": 10, 
-    "strategyInstanceOpenLimit": 10, 
-    "active": true, 
-    "tradeCountLimit": 101
+    "account1":
+    {
+    "contractPositionLimit": 10,
+    "accountMarginRatio": 30,
+    "active": true,
+    "tradeCountLimit": 100
+    },
+
+    "account2":
+    {
+    "contractPositionLimit": 10,
+    "accountMarginRatio": 30,
+    "active": true,
+    "tradeCountLimit": 100
+    },
+
+    "account3":
+    {
+    "contractPositionLimit": 10,
+    "accountMarginRatio": 30,
+    "active": true,
+    "tradeCountLimit": 100
+    }
 }

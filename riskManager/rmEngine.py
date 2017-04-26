@@ -32,17 +32,17 @@ class RmEngine(object):
         self.eventEngine = eventEngine
         
         # 是否启动风控
-        self.active = False
+        self.active = {}
         # 账户保证金比例
-        self.accountMarginRatio = EMPTY_FLOAT
-        self.contractMarginRatio = EMPTY_FLOAT
+        self.accountMarginRatio = {}
+        self.acctMarginRatio = {}
         # 单日累计交易次数
-        self.tradeCountLimit = EMPTY_INT
-        # 单策略
-        self.strategyInstanceOpenLimit = EMPTY_INT
-        self.strategyInstancePositionLimit = EMPTY_INT
-        # 单标的
-        self.contractPositionLimit = EMPTY_INT
+        self.tradeCountLimit = {}
+        self.tradeCount = {}
+        # 存储orderID
+        self.orderList = {}
+        # 单标的持仓信息
+        self.posDict = {}
 
         self.loadSetting()
         self.registerEvent()
@@ -52,76 +52,54 @@ class RmEngine(object):
         """读取配置"""
         with open(self.settingFileName) as f:
             d = json.load(f)
-            
-            # 设置风控参数
-            self.active = d['active']
-            
-            self.accountMarginRatio = d['accountMarginRatio']
-            self.contractMarginRatio = d['contractMarginRatio']
-            
-            self.tradeCountLimit = d['tradeCountLimit']
-            
-            self.strategyInstanceOpenLimit = d['strategyInstanceOpenLimit']
-            self.strategyInstancePositionLimit = d['strategyInstancePositionLimit']
-            
-            self.contractPositionLimit = d['contractPositionLimit']
-        
-    #----------------------------------------------------------------------
-    def saveSetting(self):
-        """保存风控参数"""
-        with open(self.settingFileName, 'w') as f:
-            # 保存风控参数
-            d = {}
+            for i in d.keys():
+                # 设置风控参数
+                self.active[i] = d[i]['active']
 
-            d['active'] = self.active
-            
-            d['accountMarginRatio'] = self.accountMarginRatio
-            d['contractMarginRatio'] = self.contractMarginRatio
-            
-            d['tradeCountLimit'] = self.tradeCountLimit
-            
-            d['strategyInstanceOpenLimit'] = self.strategyInstanceOpenLimit
-            d['strategyInstancePositionLimit'] = self.strategyInstancePositionLimit
+                self.accountMarginRatio[i] = d[i]['accountMarginRatio']
 
-            d['contractPositionLimit'] = self.contractPositionLimit
-            
-            # 写入json
-            jsonD = json.dumps(d, indent=4)
-            f.write(jsonD)
-        
+                self.tradeCountLimit[i] = d[i]['tradeCountLimit']
+
+                self.contractPositionLimit[i] = d[i]['contractPositionLimit']
+
     #----------------------------------------------------------------------
     def registerEvent(self):
         """注册事件监听"""
         self.eventEngine.register(EVENT_TRADE, self.updateTrade)
-        # self.eventEngine.register(EVENT_TIMER, self.updateTimer)
-        self.eventEngine.register(EVENT_TRADE, self.qryOpenCount)
         self.eventEngine.register(EVENT_POSITION, self.qryPosition)
         self.eventEngine.register(EVENT_ACCOUNT, self.qryMargin)
 
     #----------------------------------------------------------------------
     def updateTrade(self, event):
-        """更新成交数据"""
+        """更新成交次数数据"""
         trade = event.dict_['data']
-        self.tradeCount += trade.volume
+        orderId = trade.vtOrderID
+        self.orderList[trade.accountID].append(orderId)
+        self.tradeCount  = len(set(self.orderList[trade.accountID]))
 
     # ----------------------------------------------------------------------
     def qryMargin(self,event):
         """查询单账户保证金比例"""
-        marginRatio = event.dict_['data']
-        self.acctMarginRatio = marginRatio.margin
+        margin = event.dict_['data']
+        if margin.balance != 0:
+            self.acctMarginRatio[margin.accountID] = float(margin.margin/margin.balance)
+        else:
+            self.acctMarginRatio[margin.accountID] = 0
 
     #----------------------------------------------------------------------
     def qryPosition(self,event):
-        """查询单策略实例累计持仓"""
-        siPositionLimit = event.dict_['data']
-        self.siPositionLimit = siPositionLimit.position
+        """查询单标的合约实例累计持仓"""
+        pos= event.dict_['data']
+        self.posDict[pos.accountID][pos.vtSymbol] = pos.position
+
+
 
     # ---------------------------------------------------------------------
-    def qryOpenCount(self,event):
-        """查询单策略实例开仓"""
-        siOpenCount = event.dict_['data']
-        if siOpenCount.offset == u'开仓':
-            self.siOpenLimit += siOpenCount
+    # def qryOpenCount(self,event):
+    #     """查询单策略实例开仓"""
+    #     siOpenCount = event.dict_['data']
+    #     if siOpenCount.offset == u'开仓':
+    #         self.siOpenLimit += siOpenCount
     # ---------------------------------------------------------------------
 
     # def updateTimer(self, event):
@@ -151,110 +129,33 @@ class RmEngine(object):
         self.eventEngine.put(event)      
     
     #----------------------------------------------------------------------
-    def checkRisk(self, orderReq):
+    def checkRisk(self, orderReq, accountName):
         """检查风险"""
+        accountName = orderReq.accountID
         # 如果没有启动风控检查，则直接返回成功
-        if not self.active:
+        if not self.active[accountName]:
             return True
 
-        # 检查单策略实例单次开仓限制
-        if self.siOpenLimit > self.strategyInstanceOpenLimit:
-            self.writeRiskLog(u'单策略实例单次开仓数量%s，超过限制%s'
-                             %(self.siOpenLimit, self.strategyInstanceOpenLimit))
-            return False
-
-        # 检查单策略累计持仓限制
-        if self.siPositionLimit > self.strategyInstancePositionLimit:
-            self.writeRiskLog(u'单策略实例累计持仓%s，超过限制%s'
-                              % (self.siPositionLimit, self.strategyInstancePositionLimit))
-            return False
-
-        # # 检查单标的合约累计持仓限制
-        # if self.contract.position > self.contractPositionLimit:
-        #     self.writeRiskLog(u'单标的合约累计持仓%s, 超过限制%s'
-        #                       %(self.contract.position, self.contractPositionLimit))
-        #     return False
-
         # 检查单账户保证金比例限制
-        if self.acctMarginRatio > self.accountMarginRatio:
-            self.writeRiskLog(u'单账户保证金比例限制%s, 超过持仓%s'
-                              %(self.acctMarginRatio, self.accountMarginRatio))
+        if self.acctMarginRatio[accountName] >= self.accountMarginRatio[accountName]:
+            self.writeRiskLog(u'账户保证金比例限制%s, 超过持仓%s'
+                              %(self.acctMarginRatio, self.accountMarginRatio[accountName]))
             return False
 
         # 对单日累计交易次数的提示
-        if self.tradeCount > self.tradeCountLimit:
+        if self.tradeCount[accountName] >= self.tradeCountLimit[accountName]:
             self.writeRiskLog(u'单日累计交易次数%s, 超过限制%s'
-                              %(self.tradeCount, self.tradeCountLimit))
+                              %(self.tradeCount, self.tradeCountLimit[accountName]))
             return True
 
+        # 单标的合约实例累计持仓的限制
+        if orderReq.vtSymbol in self.posDict[accountName] and self.posDict[accountName][orderReq.vtSymbol] >= self.contractPositionLimit[accountName]:
+            self.writeRiskLog(u'标的合约累计交易次数%s, 超过限制%s'
+                              % (self.posDict[accountName][orderReq.vtSymbol], self.contractPositionLimit[accountName]))
+            return False
 
-        # # 检查委托数量
-        # if orderReq.volume > self.orderSizeLimit:
-        #     self.writeRiskLog(u'单笔委托数量%s，超过限制%s'
-        #                       %(orderReq.volume, self.orderSizeLimit))
-        #     return False
-        #
-        # # 检查成交合约量
-        # if self.tradeCount >= self.tradeLimit:
-        #     self.writeRiskLog(u'今日总成交合约数量%s，超过限制%s'
-        #                       %(self.tradeCount, self.tradeLimit))
-        #     return False
-        #
-        # # 检查流控
-        # if self.orderFlowCount >= self.orderFlowLimit:
-        #     self.writeRiskLog(u'委托流数量%s，超过限制每%s秒%s'
-        #                       %(self.orderFlowCount, self.orderFlowClear, self.orderFlowLimit))
-        #     return False
-        #
-        # # 检查总活动合约
-        # workingOrderCount = len(self.mainEngine.getAllWorkingOrders())
-        # if workingOrderCount >= self.workingOrderLimit:
-        #     self.writeRiskLog(u'当前活动委托数量%s，超过限制%s'
-        #                       %(workingOrderCount, self.workingOrderLimit))
-        #     return False
-        #
-        # # 对于通过风控的委托，增加流控计数
-        # self.orderFlowCount += 1
-        
-        return True    
-    
-    #----------------------------------------------------------------------
-    # def clearOrderFlowCount(self):
-    #     """清空流控计数"""
-    #     self.orderFlowCount = 0
-    #     self.writeRiskLog(u'清空流控计数')
-        
-    #----------------------------------------------------------------------
-    def clearTradeCount(self):
-        """清空成交数量计数"""
-        self.tradeCount = 0
-        self.writeRiskLog(u'清空累计交易计数')
-        
-    #----------------------------------------------------------------------
-    def setAccountMarginRatio(self, n):
-        """设置账户保证金限制"""
-        self.accountMarginRatio = n
-        
-    #----------------------------------------------------------------------
-    def setStrategyInstanceOpenLimit(self, n):
-        """设置流控清空时间"""
-        self.strategyInstanceOpenLimit = n
-        
-    #----------------------------------------------------------------------
-    def setStrategyInstancePositionLimit(self, n):
-        """设置委托最大限制"""
-        self.strategyInstancePositionLimit = n
-        
-    #----------------------------------------------------------------------
-    def setTradeCountLimit(self, n):
-        """设置成交限制"""
-        self.tradeCountLimit = n
-        
-    #----------------------------------------------------------------------
-    def setContractPositionLimit(self, n):
-        """设置活动合约限制"""
-        self.contractPositionLimit = n
-        
+
+        return True
     #----------------------------------------------------------------------
     def switchEngineStatus(self):
         """开关风控引擎"""
@@ -264,3 +165,10 @@ class RmEngine(object):
             self.writeRiskLog(u'风险管理功能启动')
         else:
             self.writeRiskLog(u'风险管理功能停止')
+
+
+def main():
+    test = RmEngine()
+
+if __name__ == '__main__':
+    main()
