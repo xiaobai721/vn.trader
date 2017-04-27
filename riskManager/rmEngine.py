@@ -77,7 +77,10 @@ class RmEngine(object):
         """更新成交次数数据"""
         trade = event.dict_['data']
         orderId = trade.vtOrderID
-        self.orderList[trade.accountID].append(orderId)
+        if self.orderList[trade.accountID] == {}:
+            self.orderList[trade.accountID] = []
+        else:
+            self.orderList[trade.accountID].append(orderId)
         self.tradeCount  = len(set(self.orderList[trade.accountID]))
 
     # ----------------------------------------------------------------------
@@ -98,25 +101,6 @@ class RmEngine(object):
         elif pos.direction == DIRECTION_SHORT:
             self.posDict[pos.accountID][pos.vtSymbol]['Short'] = pos.position
 
-
-
-    # ---------------------------------------------------------------------
-    # def qryOpenCount(self,event):
-    #     """查询单策略实例开仓"""
-    #     siOpenCount = event.dict_['data']
-    #     if siOpenCount.offset == u'开仓':
-    #         self.siOpenLimit += siOpenCount
-    # ---------------------------------------------------------------------
-
-    # def updateTimer(self, event):
-    #     """更新定时器"""
-    #     self.orderFlowTimer += 1
-    #
-    #     # 如果计时超过了流控清空的时间间隔，则执行清空
-    #     if self.orderFlowTimer >= self.orderFlowClear:
-    #         self.orderFlowCount = 0
-    #         self.orderFlowTimer = 0
-        
     #----------------------------------------------------------------------
     def writeRiskLog(self, content):
         """快速发出日志事件"""
@@ -165,7 +149,7 @@ class RmEngine(object):
 
         if self.posDict[accountName][orderReq.vtSymbol][direction] != {} and self.posDict[accountName][orderReq.vtSymbol][direction] >= self.contractPositionLimit[accountName][direction]:
             self.writeRiskLog(u'标的合约累计交易次数%s, 超过限制%s'
-                            %(self.posDict[accountName][orderReq.vtSymbol][orderReq.direction], self.contractPositionLimit[accountName][direction]))
+                            %(self.posDict[accountName][orderReq.vtSymbol][direction], self.contractPositionLimit[accountName][direction]))
             return False
 
 
