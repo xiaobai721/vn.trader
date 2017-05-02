@@ -7,7 +7,13 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
+from eventEngine import *
 import logging, os, sys
+from datetime import datetime
+import collections
+from operator import itemgetter
+from itertools import groupby
+
 
 
 try:
@@ -24,8 +30,10 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-class Ui_Dialog(object):
+class NetCurveManager(QtGui.QWidget):
+
     def setupUi(self, Dialog):
+        self.path = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir,os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile'
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.resize(755, 515)
         self.horizontalLayoutWidget = QtGui.QWidget(Dialog)
@@ -65,15 +73,15 @@ class Ui_Dialog(object):
         self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.checkBox_2 = QtGui.QCheckBox(self.verticalLayoutWidget)
-        self.checkBox_2.setObjectName(_fromUtf8("checkBox_2"))
-        self.verticalLayout.addWidget(self.checkBox_2)
-        self.checkBox = QtGui.QCheckBox(self.verticalLayoutWidget)
-        self.checkBox.setObjectName(_fromUtf8("checkBox"))
-        self.verticalLayout.addWidget(self.checkBox)
-        self.checkBox_3 = QtGui.QCheckBox(self.verticalLayoutWidget)
-        self.checkBox_3.setObjectName(_fromUtf8("checkBox_3"))
-        self.verticalLayout.addWidget(self.checkBox_3)
+        # self.checkBox_2 = QtGui.QCheckBox(self.verticalLayoutWidget)
+        # self.checkBox_2.setObjectName(_fromUtf8("checkBox_2"))
+        # self.verticalLayout.addWidget(self.checkBox_2)
+        # self.checkBox = QtGui.QCheckBox(self.verticalLayoutWidget)
+        # self.checkBox.setObjectName(_fromUtf8("checkBox"))
+        # self.verticalLayout.addWidget(self.checkBox)
+        # self.checkBox_3 = QtGui.QCheckBox(self.verticalLayoutWidget)
+        # self.checkBox_3.setObjectName(_fromUtf8("checkBox_3"))
+        # self.verticalLayout.addWidget(self.checkBox_3)
         self.graphicsView = QtGui.QGraphicsView(Dialog)
         self.graphicsView.setGeometry(QtCore.QRect(110, 231, 461, 231))
         self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
@@ -88,22 +96,75 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
+    # ----------------------------------------------------------------------
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(_translate("Dialog", "Dialog", None))
         self.labelAcctName.setText(_translate("Dialog", "账户", None))
         self.labelContract.setText(_translate("Dialog", "标的", None))
         self.labelAmount.setText(_translate("Dialog", "初始金额", None))
-        self.checkBox_2.setText(_translate("Dialog", "con2", None))
-        self.checkBox.setText(_translate("Dialog", "con1", None))
-        self.checkBox_3.setText(_translate("Dialog", "Sum", None))
+        # self.checkBox_2.setText(_translate("Dialog", "con2", None))
+        # self.checkBox.setText(_translate("Dialog", "con1", None))
+        # self.checkBox_3.setText(_translate("Dialog", "Sum", None))
         self.ButtonStart.setText(_translate("Dialog", "分析", None))
+
+    # ----------------------------------------------------------------------
+    def loadInitData(self):
+        tree = lambda: collections.defaultdict(tree)
+        self.dataList = tree()
+        self.fileName = []
+        # names = locals()
+
+        self.loadAllPosFile()
+        self.cbAccount.addItems([k for k in self.groupByPosFile('account').keys()])
+        self.cbContract.addItems([k for k in self.groupByPosFile('contract').keys()])
+
+
+        for k in self.groupByPosFile('strategy').keys():
+            self.batchAssignment(k)
+
+        # 加总净值曲线
+        self.batchAssignment('Sum')
+
+    # ----------------------------------------------------------------------
+
+    def batchAssignment(self,i):
+        self.names = locals()
+        self.names['self.%s' % i] = QtGui.QCheckBox(self.verticalLayoutWidget)
+        self.names['self.%s' % i].setObjectName(_fromUtf8('box' + i))
+        self.names['self.%s' % i].setText(_translate("Dialog", i, None))
+
+        self.verticalLayout.addWidget(self.names['self.%s' % i])
+    # ----------------------------------------------------------------------
+
+    def loadAllPosFile(self):
+        self.fileName = []
+        for i in os.walk(self.path):
+            if len(i[-1]) > 0 and 'txt' in i[-1][0]:
+                for j in i[-1]:
+                    self.dataList = {}
+                    self.dataList['name'] = j
+                    self.dataList['account'] = j.split('_', 1)[0]
+                    self.dataList['strategy'] = j.split('_', 2)[1]
+                    self.dataList['contract'] = j.split('_', 2)[2][:-4]
+                    self.fileName.append(self.dataList)
+            break
+
+    # ----------------------------------------------------------------------
+    def groupByPosFile(self, field):
+
+        try:
+            return dict([(g, list(k)) for g, k in groupby(self.fileName, key=lambda x: x[field])])
+        except Exception as e:
+            print e
+            return []
 
 
 if __name__ == '__main__':
     app = 0
     app = QtGui.QApplication(sys.argv)
     Dialog = QtGui.QDialog()
-    ui = Ui_Dialog()
+    ui = NetCurveManager()
     ui.setupUi(Dialog)
+    ui.loadInitData()
     Dialog.show()
     sys.exit(app.exec_())
