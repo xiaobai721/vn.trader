@@ -113,104 +113,104 @@ class NetCurveManager(QtGui.QWidget):
             return []
 
     # ----------------------------------------------------------------------
-    def OnButton_GenList(self):          # 生成list
-        self.pathList = []
-        self.showList.clearList()
-        for key in self.checkList.checkboxDict.keys():
-            if self.checkList.checkboxDict[key].isChecked():
-                self.pathList.append(str(key))
-#                print self.checkList.checkboxDict[key]
-                self.showList.updateList(str(key))
-
-    # ----------------------------------------------------------------------
-    def OnButton_GenCurve(self):          # 生成曲线
-        try:
-            e = self.analysisEngine.calculateNetCurve(self.analysisEngine.sumNet(self.pathList),int(self.lineedit.text()))
-
-            self.showList.updateList('')
-            # uiResult = showResult()
-            for k in e.keys():
-                self.showList.updateList(k+':'+str(e[k]))
-            # uiResult.show()
-
-        except Exception as e:
-            print e
-
-    # ----------------------------------------------------------------------
-    def OnButton_initCheckBoxList(self):          # 初始化list
-        self.checkList.initUI(self.path)
-        
-    def OnButton_choosePath(self):          # 选择路径
-        self.path = QtGui.QFileDialog.getExistingDirectory().replace('\\','/')
-        print self.path
-        if hasattr(self.checkList, 'gridlayout'):
-            self.checkList.gridlayout.destroyed()
-
-        # self.checkList.initUI(self.path)
-        
-class checkboxList(QtGui.QWidget):
-    def __init__(self,path,analysisEngine):
-        QtGui.QWidget.__init__(self)  
-        self.setWindowTitle('checkList')       # 设置窗口标题
-        self.analysisEngine = analysisEngine
-        self.gridlayout = QtGui.QGridLayout()
-
-        # self.initUI(path)
-    def initUI(self,path):
-        pathList = self.analysisEngine.pathIter(path)
-        self.checkboxDict = {}
-        self.gridlayout.update()
-        self.gridlayout.layout()
-        for i in range(len(pathList)):
-            self.checkboxDict[pathList[i]] = QtGui.QCheckBox(str(pathList[i]))
-            self.gridlayout.addWidget(self.checkboxDict[pathList[i]], i+3, 1)
-        # for i in range(10000):
-            # self.checkboxDict[i] = QtGui.QCheckBox('check '+str(i))
-            # self.gridlayout.addWidget(self.checkboxDict[i], i+3, 1)    
-        self.setLayout(self.gridlayout)       # 向窗口中添加布局组件
-        self.gridlayout.update()
-
-class showList(QtGui.QWidget):
-    def __init__(self):  
-        QtGui.QWidget.__init__(self)  
-        self.setWindowTitle('showList')       # 设置窗口标题
-        self.initUI()
-    def initUI(self):
-        # CTA组件的日志监控
-        self.ctaLogMonitor = QtGui.QTextEdit()
-        self.ctaLogMonitor.setReadOnly(True)
-        self.gridlayout = QtGui.QGridLayout()
-        self.gridlayout.addWidget(self.ctaLogMonitor)
-        self.setLayout(self.gridlayout)       # 向窗口中添加布局组件
-    def updateList(self,rows):
-        self.ctaLogMonitor.append(rows)
-    def clearList(self):
-        self.ctaLogMonitor.clear()
-
-class showResult(QtGui.QWidget):
-    def __init__(self):  
-        QtGui.QWidget.__init__(self)  
-        self.setWindowTitle('showResult')       # 设置窗口标题
-        self.initUI()
-    def initUI(self):
-        # CTA组件的日志监控
-        self.ctaLogMonitor = QtGui.QTextEdit()
-        self.ctaLogMonitor.setReadOnly(True)
-        self.gridlayout = QtGui.QGridLayout()
-        self.gridlayout.addWidget(self.ctaLogMonitor)
-        self.setLayout(self.gridlayout)       # 向窗口中添加布局组件
-    def updateList(self,rows):
-        self.ctaLogMonitor.append(rows)
-    def clearList(self):
-        self.ctaLogMonitor.clear()
-        
-
-if __name__ == '__main__':
-    app = 0
-    app = QtGui.QApplication(sys.argv)
-    # checkList = showList()
-    # checkList.show()
-#    checkList.updateList(str(1111))
-#     mywindow = MyWindow()
-#     mywindow.show()
-    app.exec_()
+#     def OnButton_GenList(self):          # 生成list
+#         self.pathList = []
+#         self.showList.clearList()
+#         for key in self.checkList.checkboxDict.keys():
+#             if self.checkList.checkboxDict[key].isChecked():
+#                 self.pathList.append(str(key))
+# #                print self.checkList.checkboxDict[key]
+#                 self.showList.updateList(str(key))
+#
+#     # ----------------------------------------------------------------------
+#     def OnButton_GenCurve(self):          # 生成曲线
+#         try:
+#             e = self.analysisEngine.calculateNetCurve(self.analysisEngine.sumNet(self.pathList),int(self.lineedit.text()))
+#
+#             self.showList.updateList('')
+#             # uiResult = showResult()
+#             for k in e.keys():
+#                 self.showList.updateList(k+':'+str(e[k]))
+#             # uiResult.show()
+#
+#         except Exception as e:
+#             print e
+#
+#     # ----------------------------------------------------------------------
+#     def OnButton_initCheckBoxList(self):          # 初始化list
+#         self.checkList.initUI(self.path)
+#
+#     def OnButton_choosePath(self):          # 选择路径
+#         self.path = QtGui.QFileDialog.getExistingDirectory().replace('\\','/')
+#         print self.path
+#         if hasattr(self.checkList, 'gridlayout'):
+#             self.checkList.gridlayout.destroyed()
+#
+#         # self.checkList.initUI(self.path)
+#
+# class checkboxList(QtGui.QWidget):
+#     def __init__(self,path,analysisEngine):
+#         QtGui.QWidget.__init__(self)
+#         self.setWindowTitle('checkList')       # 设置窗口标题
+#         self.analysisEngine = analysisEngine
+#         self.gridlayout = QtGui.QGridLayout()
+#
+#         # self.initUI(path)
+#     def initUI(self,path):
+#         pathList = self.analysisEngine.pathIter(path)
+#         self.checkboxDict = {}
+#         self.gridlayout.update()
+#         self.gridlayout.layout()
+#         for i in range(len(pathList)):
+#             self.checkboxDict[pathList[i]] = QtGui.QCheckBox(str(pathList[i]))
+#             self.gridlayout.addWidget(self.checkboxDict[pathList[i]], i+3, 1)
+#         # for i in range(10000):
+#             # self.checkboxDict[i] = QtGui.QCheckBox('check '+str(i))
+#             # self.gridlayout.addWidget(self.checkboxDict[i], i+3, 1)
+#         self.setLayout(self.gridlayout)       # 向窗口中添加布局组件
+#         self.gridlayout.update()
+#
+# class showList(QtGui.QWidget):
+#     def __init__(self):
+#         QtGui.QWidget.__init__(self)
+#         self.setWindowTitle('showList')       # 设置窗口标题
+#         self.initUI()
+#     def initUI(self):
+#         # CTA组件的日志监控
+#         self.ctaLogMonitor = QtGui.QTextEdit()
+#         self.ctaLogMonitor.setReadOnly(True)
+#         self.gridlayout = QtGui.QGridLayout()
+#         self.gridlayout.addWidget(self.ctaLogMonitor)
+#         self.setLayout(self.gridlayout)       # 向窗口中添加布局组件
+#     def updateList(self,rows):
+#         self.ctaLogMonitor.append(rows)
+#     def clearList(self):
+#         self.ctaLogMonitor.clear()
+#
+# class showResult(QtGui.QWidget):
+#     def __init__(self):
+#         QtGui.QWidget.__init__(self)
+#         self.setWindowTitle('showResult')       # 设置窗口标题
+#         self.initUI()
+#     def initUI(self):
+#         # CTA组件的日志监控
+#         self.ctaLogMonitor = QtGui.QTextEdit()
+#         self.ctaLogMonitor.setReadOnly(True)
+#         self.gridlayout = QtGui.QGridLayout()
+#         self.gridlayout.addWidget(self.ctaLogMonitor)
+#         self.setLayout(self.gridlayout)       # 向窗口中添加布局组件
+#     def updateList(self,rows):
+#         self.ctaLogMonitor.append(rows)
+#     def clearList(self):
+#         self.ctaLogMonitor.clear()
+#
+#
+# if __name__ == '__main__':
+#     app = 0
+#     app = QtGui.QApplication(sys.argv)
+#     # checkList = showList()
+#     # checkList.show()
+# #    checkList.updateList(str(1111))
+# #     mywindow = MyWindow()
+# #     mywindow.show()
+#     app.exec_()
