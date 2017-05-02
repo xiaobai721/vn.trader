@@ -28,7 +28,11 @@ class PostAnalysis(object):
 
     ctaEngineLogFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\temp'
     ctaEngineTradeCacheFile = os.getcwd() + '/tradeCache'
-    statementFile = os.getcwd() + '/statement'
+    ctaSettingFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\algoConfig'
+
+    ctaCurrPosFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir,os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile'
+    ctaHisPosFile = ctaCurrPosFile + '\\' + 'hisPosFile'
+    # statementFile = os.getcwd() + '/statement'
 
     #---------------------------------------------------------------------
     def __init__(self):
@@ -51,6 +55,8 @@ class PostAnalysis(object):
         # 交易记录
         self.tradeList = OrderedDict()
         self.statement = OrderedDict()
+        # 有效实例
+        self.validateSi = []
 
         self.symbolInformation = {}
 
@@ -387,6 +393,28 @@ class PostAnalysis(object):
 
         return sum(tempCaptial)
 
+    # ----------------------------------------------------------------------
+    def backupHisPos(self):
+        if not os.path.exists(self.ctaHisPosFile):
+            os.makedirs(self.ctaHisPosFile)
+        valList = self.loadCTASetting()
+        for i in os.walk(self.ctaCurrPosFile):
+            if len(i[-1]) > 0 and 'txt' in i[-1][0]:
+                for j in i[-1] :
+                    if j.split('_', 1)[-1][:-4] in valList:
+                        os.rename(i[0] + '/' + j, i[0] + '/his/' + j)
+
+    # ---------------------------------------------------------------------
+    def loadCTASetting(self):
+        try:
+            with open(self.ctaSettingFile + '\\' + 'CTA_SETTING.json') as f:
+                d = json.load(f)
+                self.validateSi.append([d[i]['name'] for i in d.keys()])
+                return self.validateSi
+        except Exception as e:
+            print e
+            return []
+
     #----------------------------------------------------------------------
     def calculateNetCurve(self,netDict,initC):
         """计算所需的各种净值相关数据"""
@@ -540,10 +568,10 @@ class TempTradeData(object):
 def main():
     endStr = datetime.now().strftime('%Y%m%d')
     startStr = (datetime.now()-timedelta(days=1)).strftime('%Y%m%d')
-    test = PostAnalysis(startStr,endStr)
+    test = PostAnalysis()
     test.loadLog()
-    test.tradeCacheLoad()
-    test.writeStatement()
+    # test.tradeCacheLoad()
+    # test.writeStatement()
 
 
 

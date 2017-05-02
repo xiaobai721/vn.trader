@@ -27,28 +27,28 @@ class EventSelection(QtGui.QWidget):
         self.setWindowTitle('EventSelection')  # 设置窗口标题
 
         #设置组件
-        # labelStart = QtGui.QLabel(u'起始时间')
-        # labelEnd = QtGui.QLabel(u'终止时间')
-        #
-        # self.editStart = QtGui.QLineEdit()
-        # self.editEnd = QtGui.QLineEdit()
 
-        buttonData = QtGui.QPushButton(u'数据统计')
-        buttonNet = QtGui.QPushButton(u'净值分析')
+        self.buttonData = QtGui.QPushButton(u'数据统计')
+        self.buttonNet = QtGui.QPushButton(u'净值分析')
 
-        buttonData.clicked.connect(self.data)
-        buttonNet.clicked.connect(self.net)
+        self.radioCurrData = QtGui.QRadioButton(u'当前数据统计')
+        self.radioHisData = QtGui.QRadioButton(u'历史数据统计')
+        self.radioCurrData.setChecked(True)
+
+        self.buttonData.clicked.connect(self.data)
+        self.buttonNet.clicked.connect(self.net)
 
         # 设置布局
         buttonHBox = QtGui.QHBoxLayout()
         buttonHBox.addStretch()
-        buttonHBox.addWidget(buttonData)
-        buttonHBox.addWidget(buttonNet)
+        buttonHBox.addWidget(self.buttonData)
+        buttonHBox.addWidget(self.buttonNet)
 
         # self.editStart.setMinimumWidth(200)
 
         grid = QtGui.QGridLayout()
-        # grid.addWidget(labelStart, 0, 0)
+        grid.addWidget(self.radioCurrData, 1, 2)
+        grid.addWidget(self.radioHisData, 2, 2)
         # grid.addWidget(labelEnd, 1, 0)
         # grid.addWidget(self.editStart, 0, 1)
         # grid.addWidget(self.editEnd, 1, 1)
@@ -69,6 +69,7 @@ class EventSelection(QtGui.QWidget):
                 self.mainEngine.dbConnect()
                 lastTickData = self.mainEngine.dbQuery('MTS_lastTick_DB',"20170331",None)
                 self.analysisEngine.loadTradeHolding(lastTickData)
+
             except Exception, e:
                 print e
                 continue
@@ -78,6 +79,13 @@ class EventSelection(QtGui.QWidget):
 
     def net(self):
         # print 'net'
+        self.analysisEngine.backupHisPos()
+
+        if self.radioCurrData.isChecked():
+            sign = 'Curr'
+        elif self.radioHisData.isChecked():
+            sign = 'His'
+
         try:
             self.widgetDict['netCurve'].showMaximized()
         except KeyError:
