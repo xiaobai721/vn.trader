@@ -9,11 +9,13 @@
 from PyQt4 import QtCore, QtGui
 from eventEngine import *
 import logging, os, sys
-from datetime import datetime
+# from datetime import datetime
 import collections
-from operator import itemgetter
-from itertools import groupby
-
+# from operator import itemgetter
+import matplotlib.pyplot as plt
+from itertools import groupby,product
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 
 try:
@@ -73,18 +75,16 @@ class NetCurveManager(QtGui.QWidget):
         self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        # self.checkBox_2 = QtGui.QCheckBox(self.verticalLayoutWidget)
-        # self.checkBox_2.setObjectName(_fromUtf8("checkBox_2"))
-        # self.verticalLayout.addWidget(self.checkBox_2)
-        # self.checkBox = QtGui.QCheckBox(self.verticalLayoutWidget)
-        # self.checkBox.setObjectName(_fromUtf8("checkBox"))
-        # self.verticalLayout.addWidget(self.checkBox)
-        # self.checkBox_3 = QtGui.QCheckBox(self.verticalLayoutWidget)
-        # self.checkBox_3.setObjectName(_fromUtf8("checkBox_3"))
-        # self.verticalLayout.addWidget(self.checkBox_3)
-        self.graphicsView = QtGui.QGraphicsView(Dialog)
-        self.graphicsView.setGeometry(QtCore.QRect(110, 231, 461, 231))
-        self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
+
+        self.dpi = 100
+        self.fig = Figure(dpi=self.dpi)
+        mgr = plt.get_current_fig_manager()
+        mgr.window.setGeometry(110, 231, 461, 231)
+        self.canvas = FigureCanvas(mgr)
+        self.canvas.setParent(Dialog)
+        # self.graphicsView = QtGui.QGraphicsView(Dialog)
+        # self.graphicsView.setGeometry(QtCore.QRect(110, 231, 461, 231))
+        # self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
         self.ButtonStart = QtGui.QPushButton(Dialog)
         self.ButtonStart.setGeometry(QtCore.QRect(50, 320, 51, 23))
         self.ButtonStart.setObjectName(_fromUtf8("ButtonStart"))
@@ -102,11 +102,34 @@ class NetCurveManager(QtGui.QWidget):
         self.labelAcctName.setText(_translate("Dialog", "账户", None))
         self.labelContract.setText(_translate("Dialog", "标的", None))
         self.labelAmount.setText(_translate("Dialog", "初始金额", None))
-        # self.checkBox_2.setText(_translate("Dialog", "con2", None))
-        # self.checkBox.setText(_translate("Dialog", "con1", None))
-        # self.checkBox_3.setText(_translate("Dialog", "Sum", None))
         self.ButtonStart.setText(_translate("Dialog", "分析", None))
 
+    # ----------------------------------------------------------------------
+    def triggerEvent(self):
+        self.ButtonStart.clicked.connect(self.startCalculate)
+    # ----------------------------------------------------------------------
+    def on_draw(self):
+        """ Redraws the figure
+        """
+        str = unicode(self.textbox.text())
+        self.data = map(int, str.split())
+
+        x = range(len(self.data))
+
+        # clear the axes and redraw the plot anew
+        #
+        self.axes.clear()
+        self.axes.grid(self.grid_cb.isChecked())
+
+        self.axes.bar(
+            left=x,
+            height=self.data,
+            width=self.slider.value() / 100.0,
+            align='center',
+            alpha=0.44,
+            picker=5)
+
+        self.canvas.draw()
     # ----------------------------------------------------------------------
     def loadInitData(self):
         tree = lambda: collections.defaultdict(tree)
@@ -118,7 +141,7 @@ class NetCurveManager(QtGui.QWidget):
         self.cbAccount.addItems([k for k in self.groupByPosFile('account').keys()])
         self.cbContract.addItems([k for k in self.groupByPosFile('contract').keys()])
 
-
+        self.names = locals()
         for k in self.groupByPosFile('strategy').keys():
             self.batchAssignment(k)
 
@@ -128,12 +151,12 @@ class NetCurveManager(QtGui.QWidget):
     # ----------------------------------------------------------------------
 
     def batchAssignment(self,i):
-        self.names = locals()
-        self.names['self.%s' % i] = QtGui.QCheckBox(self.verticalLayoutWidget)
-        self.names['self.%s' % i].setObjectName(_fromUtf8('box' + i))
-        self.names['self.%s' % i].setText(_translate("Dialog", i, None))
 
-        self.verticalLayout.addWidget(self.names['self.%s' % i])
+        self.names['self.s_%s' % i] = QtGui.QCheckBox(self.verticalLayoutWidget)
+        self.names['self.s_%s' % i].setObjectName(_fromUtf8('box' + i))
+        self.names['self.s_%s' % i].setText(_translate("Dialog", i, None))
+
+        self.verticalLayout.addWidget(self.names['self.s_%s' % i])
     # ----------------------------------------------------------------------
 
     def loadAllPosFile(self):
@@ -158,6 +181,51 @@ class NetCurveManager(QtGui.QWidget):
             print e
             return []
 
+    # ----------------------------------------------------------------------
+    def pathIter(self, assembledList):
+        """文件查询迭代函数"""
+        pathList = []
+        filePathList = []
+        for i in assembledList:
+            try:
+                if len(i) > 2:
+                    pathList.append(filter(lambda x:x['account'] == i[0] and x['contract'] == i[1] and x['strategy'] == i[2],self.fileName))
+                else:
+                    pathList.append(filter(lambda x: x['account'] == i[0] and x['strategy'] == i[1],self.fileName))
+            except Exception as e:
+                    print e
+
+        # return set(pathList)
+        for i in list(set(pathList)):
+            if i != []:
+                filePathList.append(str(self.path + i[0]['name']))
+
+        return filePathList
+    # ----------------------------------------------------------------------
+    def startCalculate(self):
+
+        if self.cbAccount.currentText() != {}:
+            acct = self.cbAccount.currentText()
+        else:
+            QtGui.QMessageBox.warning(self, u'Warning', u'请选择账户！')
+            acct = None
+
+        con = self.cbContract.currentText() if self.cbContract.currentText() != {} else None
+        strategyList = [a for a in self.names.keys() if 'self.s_' in a and self.names[a].isChecked()]
+
+        produceList = product(list(acct),list(con),strategyList) if con != None else product(list(acct),strategyList)
+        produceList = list(produceList)
+        try:
+            sum_sign = True if self.s_Sum.isChecked() else False
+            e = self.analysisEngine.calculateNetCurve(self.analysisEngine.sumNet(self.pathIter(produceList), sum_sign),int(self.lineAmount.text()))
+            # self.showList.updateList('')
+            # # uiResult = showResult()
+            # for k in e.keys():
+            #     self.showList.updateList(k+':'+str(e[k]))
+            # # uiResult.show()
+
+        except Exception as e:
+                print e
 
 if __name__ == '__main__':
     app = 0
@@ -166,5 +234,6 @@ if __name__ == '__main__':
     ui = NetCurveManager()
     ui.setupUi(Dialog)
     ui.loadInitData()
+    ui.triggerEvent()
     Dialog.show()
     sys.exit(app.exec_())
