@@ -501,28 +501,28 @@ class PostAnalysis(object):
         return e
 
     #----------------------------------------------------------------------
-    def genNetData(self,path):
-        """生成净值曲线数据"""
-        if os.path.isfile(path):
-            netDict = self.sumNet([path])
-        else:
-            netDict = self.sumNet(self.pathIter(path))
-        return netDict  # netDict以日期为key，净值为value的字典，不包含任何策略信息
+    # def genNetData(self,path):
+    #     """生成净值曲线数据"""
+    #     if os.path.isfile(path):
+    #         netDict = self.sumNet([path])
+    #     else:
+    #         netDict = self.sumNet(self.pathIter(path))
+    #     return netDict  # netDict以日期为key，净值为value的字典，不包含任何策略信息
 
     #----------------------------------------------------------------------
-    def pathIter(self,path):
-        """文件查询迭代函数"""
-        pathList = []
-        path1 = os.listdir(path)
-        for p in path1:
-            if os.path.isfile(path+'/'+p):
-                pathList.append(path+'/'+p)
-            else:
-                pathList = pathList + self.pathIter(path+'/'+p)
-        return list(set(pathList))
+    # def pathIter(self,path):
+    #     """文件查询迭代函数"""
+    #     pathList = []
+    #     path1 = os.listdir(path)
+    #     for p in path1:
+    #         if os.path.isfile(path+'/'+p):
+    #             pathList.append(path+'/'+p)
+    #         else:
+    #             pathList = pathList + self.pathIter(path+'/'+p)
+    #     return list(set(pathList))
 
     #----------------------------------------------------------------------
-    def sumNet(self,filePathList):
+    def sumNet(self,filePathList,sum_sign):
         """加总曲线净值"""
         netDict = {}
         dateList = []
@@ -544,7 +544,7 @@ class PostAnalysis(object):
                 except Exception as e:
                     temp.append(0)
 
-            netOut[d] = sum(temp)
+            netOut[d] = sum(temp) if sum_sign else temp
 
         return netOut
 

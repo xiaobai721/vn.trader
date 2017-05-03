@@ -70,24 +70,35 @@ class NetCurveManager(QtGui.QWidget):
         self.lineAmount = QtGui.QLineEdit(self.horizontalLayoutWidget)
         self.lineAmount.setObjectName(_fromUtf8("lineAmount"))
         self.horizontalLayout.addWidget(self.lineAmount)
+        # checkbox
         self.verticalLayoutWidget = QtGui.QWidget(Dialog)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(600, 230, 101, 231))
         self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
 
-        self.dpi = 100
-        self.fig = Figure(dpi=self.dpi)
-        mgr = plt.get_current_fig_manager()
-        mgr.window.setGeometry(110, 231, 461, 231)
-        self.canvas = FigureCanvas(mgr)
-        self.canvas.setParent(Dialog)
+        # horizontalLayoutWidget_2
+        self.horizontalLayoutWidget_2 = QtGui.QWidget(Dialog)
+        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(39, 209, 661, 241))
+        self.horizontalLayoutWidget_2.setObjectName(_fromUtf8("horizontalLayoutWidget_2"))
+        self.horizontalLayout_2 = QtGui.QHBoxLayout(self.horizontalLayoutWidget_2)
+        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         # self.graphicsView = QtGui.QGraphicsView(Dialog)
         # self.graphicsView.setGeometry(QtCore.QRect(110, 231, 461, 231))
         # self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
-        self.ButtonStart = QtGui.QPushButton(Dialog)
-        self.ButtonStart.setGeometry(QtCore.QRect(50, 320, 51, 23))
+        self.ButtonStart = QtGui.QPushButton(self.horizontalLayoutWidget_2)
+        # self.ButtonStart.setGeometry(QtCore.QRect(50, 320, 51, 23))
         self.ButtonStart.setObjectName(_fromUtf8("ButtonStart"))
+        self.horizontalLayout_2.addWidget(self.ButtonStart)
+
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
+        # self.toolbar = NavigationToolbar(self.canvas, self)
+        self.horizontalLayout_2.addWidget(self.canvas)
+
+        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+
         self.labelMetrics = QtGui.QLabel(Dialog)
         self.labelMetrics.setGeometry(QtCore.QRect(40, 150, 661, 41))
         self.labelMetrics.setText(_fromUtf8(""))
@@ -147,16 +158,16 @@ class NetCurveManager(QtGui.QWidget):
 
         # 加总净值曲线
         self.batchAssignment('Sum')
-
+        self.horizontalLayout_2.addLayout(self.verticalLayout)
     # ----------------------------------------------------------------------
 
     def batchAssignment(self,i):
 
-        self.names['self.s_%s' % i] = QtGui.QCheckBox(self.verticalLayoutWidget)
+        self.names['self.s_%s' % i] = QtGui.QCheckBox(self.horizontalLayoutWidget_2)
         self.names['self.s_%s' % i].setObjectName(_fromUtf8('box' + i))
         self.names['self.s_%s' % i].setText(_translate("Dialog", i, None))
-
         self.verticalLayout.addWidget(self.names['self.s_%s' % i])
+
     # ----------------------------------------------------------------------
 
     def loadAllPosFile(self):
