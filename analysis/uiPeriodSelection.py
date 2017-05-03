@@ -8,7 +8,7 @@ from uiBasicWidget import QtGui, QtCore, BasicCell
 from eventEngine import *
 import logging, os, sys
 from datetime import datetime
-from analysis.uiNetCurve import NetCurveManager
+from analysis.uiQtNetCurve_bk import NetCurveManager
 
 class EventSelection(QtGui.QWidget):
     """分析功能选择"""
@@ -75,7 +75,7 @@ class EventSelection(QtGui.QWidget):
                 continue
         QtGui.QMessageBox.information(self, u'Information', u'基础数据分析完成!')
 
-        # self.close()
+        self.close()
 
     def net(self):
         # print 'net'
@@ -87,12 +87,15 @@ class EventSelection(QtGui.QWidget):
             sign = 'His'
 
         try:
-            self.widgetDict['netCurve'].showMaximized()
-        except KeyError:
-            self.widgetDict['netCurve'] = NetCurveManager(self.analysisEngine)
-            self.widgetDict['netCurve'].showMaximized()
+            self.Dialog = QtGui.QDialog()
+            self.widgetDict['netCurve'] = NetCurveManager(self.analysisEngine, self.Dialog, parent=self)
+            self.Dialog.show()
+        except Exception, e:
+            print e
 
-        # self.close()
+            # self.widgetDict['netCurve'].show()
+
+        self.close()
 
 
 def main():

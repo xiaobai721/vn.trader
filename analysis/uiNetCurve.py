@@ -94,7 +94,7 @@ class NetCurveManager(QtGui.QWidget):
 #         self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
     # ----------------------------------------------------------------------
     def loadAllPosFile(self):
-        for i in os.walk(self.ctaCurrPosFile):
+        for i in os.walk(self.path):
             if len(i[-1]) > 0 and 'txt' in i[-1][0]:
                 for j in i[-1] :
                     self.dataList['name'] = j

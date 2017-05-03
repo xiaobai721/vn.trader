@@ -68,9 +68,9 @@ class PostAnalysis(object):
 
         self.logger1 = logging.getLogger('statementLogger')
         self.logger1.setLevel(logging.DEBUG)
-        fh = logging.handlers.RotatingFileHandler(self.statementFile+'/statementLog', mode='a', maxBytes=1024*1024)
+        # fh = logging.handlers.RotatingFileHandler(self.statementFile+'/statementLog', mode='a', maxBytes=1024*1024)
         ch = logging.StreamHandler()
-        self.logger1.addHandler(fh)
+        # self.logger1.addHandler(fh)
         self.logger1.addHandler(ch)
 
         self.loadSymbolInformation()
@@ -437,37 +437,37 @@ class PostAnalysis(object):
         e['terminalNet'] = tempCaptial[-1]
         e['terminalRet'] = tempCaptial[-1]/initC
 
-        showN = 20
-        n = len(dateList)
-
-        fig = plt.figure(figsize=(8,4))
-        plt.plot(range(n),tempCaptial,label="netCurve",color="red",linewidth=2,linestyle="-", marker="o")
-        ax = plt.gca()
-        if n < showN:
-            ax.set_xticks(np.linspace(0,n-1,n))
-            ax.set_xticklabels(dateList)
-        else:
-            ax.set_xticks(np.linspace(0,n-1,showN))
-            index = list(np.linspace(0,n-1,showN))
-            for i in range(len(index)):
-                index[i] = int(index[i])
-            index = list(set(index))
-            if index[-1] < n-1:
-                index.append(n-1)
-            dateList1 = []
-            for i in index:
-                dateList1.append(dateList[i])
-            ax.set_xticklabels(dateList1)
-
-        xlabels = ax.get_xticklabels()
-        for xl in xlabels:
-            xl.set_rotation(90)
-        plt.xlabel("Date")
-        plt.ylabel("Net")
-        plt.title("Selected Net Curve")
-        plt.grid()
-        # plt.ylim(min(tempCaptial)-10,max(tempCaptial)+10)
-        plt.show()
+        # showN = 20
+        # n = len(dateList)
+        #
+        # fig = plt.figure(figsize=(8,4))
+        # plt.plot(range(n),tempCaptial,label="netCurve",color="red",linewidth=2,linestyle="-", marker="o")
+        # ax = plt.gca()
+        # if n < showN:
+        #     ax.set_xticks(np.linspace(0,n-1,n))
+        #     ax.set_xticklabels(dateList)
+        # else:
+        #     ax.set_xticks(np.linspace(0,n-1,showN))
+        #     index = list(np.linspace(0,n-1,showN))
+        #     for i in range(len(index)):
+        #         index[i] = int(index[i])
+        #     index = list(set(index))
+        #     if index[-1] < n-1:
+        #         index.append(n-1)
+        #     dateList1 = []
+        #     for i in index:
+        #         dateList1.append(dateList[i])
+        #     ax.set_xticklabels(dateList1)
+        #
+        # xlabels = ax.get_xticklabels()
+        # for xl in xlabels:
+        #     xl.set_rotation(90)
+        # plt.xlabel("Date")
+        # plt.ylabel("Net")
+        # plt.title("Selected Net Curve")
+        # plt.grid()
+        # # plt.ylim(min(tempCaptial)-10,max(tempCaptial)+10)
+        # plt.show()
 
         return e
     #----------------------------------------------------------------------

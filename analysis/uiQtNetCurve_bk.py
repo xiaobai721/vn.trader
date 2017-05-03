@@ -11,9 +11,10 @@ from eventEngine import *
 import logging, os, sys
 # from datetime import datetime
 import collections
+import numpy as np
 # from operator import itemgetter
 import matplotlib.pyplot as plt
-from itertools import groupby,product
+from itertools import groupby, product
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -32,11 +33,24 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-class NetCurveManager(QtGui.QWidget):
+class NetCurveManager(QtGui.QDialog):
+
+    def __init__(self, analysisEngine, Dialog, parent = None):
+        QtGui.QDialog.__init__(self, parent)  # 调用父类初始化方法
+        # super(NetCurveManager, self).__init__(parent)
+        # self.setWindowTitle('NetCurve')
+        self.analysisEngine = analysisEngine
+        # Dialog = QtGui.QDialog()
+        # ui = NetCurveManager()
+        self.setupUi(Dialog)
+        self.loadInitData()
+        # ui.triggerEvent()
+        # ui.on_draw()
+        # self.show()
 
     def setupUi(self, Dialog):
         self.path = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir,os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile'
-        Dialog.setObjectName(_fromUtf8("Dialog"))
+        Dialog.setObjectName(_fromUtf8("NetCurve"))
         Dialog.resize(755, 515)
         self.horizontalLayoutWidget = QtGui.QWidget(Dialog)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(40, 30, 661, 80))
@@ -71,45 +85,42 @@ class NetCurveManager(QtGui.QWidget):
         self.lineAmount.setObjectName(_fromUtf8("lineAmount"))
         self.horizontalLayout.addWidget(self.lineAmount)
         # checkbox
-        self.verticalLayoutWidget = QtGui.QWidget(Dialog)
+        self.verticalLayoutWidget = QtGui.QWidget()
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(600, 230, 101, 231))
         self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
 
         # horizontalLayoutWidget_2
-        self.horizontalLayoutWidget_2 = QtGui.QWidget(Dialog)
+        self.horizontalLayoutWidget_2 = QtGui.QWidget()
         self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(39, 209, 661, 241))
         self.horizontalLayoutWidget_2.setObjectName(_fromUtf8("horizontalLayoutWidget_2"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.horizontalLayoutWidget_2)
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        # self.graphicsView = QtGui.QGraphicsView(Dialog)
-        # self.graphicsView.setGeometry(QtCore.QRect(110, 231, 461, 231))
-        # self.graphicsView.setObjectName(_fromUtf8("graphicsView"))
+
         self.ButtonStart = QtGui.QPushButton(self.horizontalLayoutWidget_2)
-        # self.ButtonStart.setGeometry(QtCore.QRect(50, 320, 51, 23))
         self.ButtonStart.setObjectName(_fromUtf8("ButtonStart"))
         self.horizontalLayout_2.addWidget(self.ButtonStart)
 
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
-        # self.toolbar = NavigationToolbar(self.canvas, self)
         self.horizontalLayout_2.addWidget(self.canvas)
 
+        # verticalLayout for checkbox
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
 
-        self.labelMetrics = QtGui.QLabel(Dialog)
+        self.labelMetrics = QtGui.QLabel()
         self.labelMetrics.setGeometry(QtCore.QRect(40, 150, 661, 41))
         self.labelMetrics.setText(_fromUtf8(""))
         self.labelMetrics.setObjectName(_fromUtf8("labelMetrics"))
-
+        #
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     # ----------------------------------------------------------------------
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog", None))
+        # Dialog.setWindowTitle(_translate("Dialog", "Dialog", None))
         self.labelAcctName.setText(_translate("Dialog", "账户", None))
         self.labelContract.setText(_translate("Dialog", "标的", None))
         self.labelAmount.setText(_translate("Dialog", "初始金额", None))
@@ -119,26 +130,47 @@ class NetCurveManager(QtGui.QWidget):
     def triggerEvent(self):
         self.ButtonStart.clicked.connect(self.startCalculate)
     # ----------------------------------------------------------------------
-    def on_draw(self):
+    def on_draw(self, dateList = None, tempCaptial = None):
         """ Redraws the figure
         """
-        str = unicode(self.textbox.text())
-        self.data = map(int, str.split())
+        self.figure.clf()
+        ax = self.figure.add_subplot(111)
+        dateList = np.linspace(-np.pi, np.pi, 256, endpoint=True)
+        dateList1 = np.linspace(-np.pi, np.pi, 50, endpoint=True)
+        tempCaptial = np.cos(dateList)
+        tempCaptial1 = np.sin(dateList1)
+        showN = 20
+        n = len(dateList)
+        m = len(dateList1)
+        # fig = plt.figure(figsize=(8, 4))
 
-        x = range(len(self.data))
+        # ax = plt.gca()
+        if n < showN:
+            ax.set_xticks(np.linspace(0, n - 1, n))
+            ax.set_xticklabels(dateList)
+        else:
+            ax.set_xticks(np.linspace(0, n - 1, showN))
+            index = list(np.linspace(0, n - 1, showN))
+            for i in range(len(index)):
+                index[i] = int(index[i])
+            index = list(set(index))
+            if index[-1] < n - 1:
+                index.append(n - 1)
+            dateList1 = []
+            for i in index:
+                dateList1.append(dateList[i])
+            ax.set_xticklabels(dateList1)
 
-        # clear the axes and redraw the plot anew
-        #
-        self.axes.clear()
-        self.axes.grid(self.grid_cb.isChecked())
-
-        self.axes.bar(
-            left=x,
-            height=self.data,
-            width=self.slider.value() / 100.0,
-            align='center',
-            alpha=0.44,
-            picker=5)
+        xlabels = ax.get_xticklabels()
+        for xl in xlabels:
+            xl.set_rotation(90)
+        plt.xlabel("Date")
+        plt.ylabel("Net")
+        plt.title("Selected Net Curve")
+        plt.grid()
+        a, = ax.plot(range(n), tempCaptial, label="netCurve")
+        b, = ax.plot(range(m), tempCaptial1, label="test")
+        ax.legend((a,b),("123","456"))
 
         self.canvas.draw()
     # ----------------------------------------------------------------------
@@ -229,6 +261,7 @@ class NetCurveManager(QtGui.QWidget):
         try:
             sum_sign = True if self.s_Sum.isChecked() else False
             e = self.analysisEngine.calculateNetCurve(self.analysisEngine.sumNet(self.pathIter(produceList), sum_sign),int(self.lineAmount.text()))
+            # self.on_draw()
             # self.showList.updateList('')
             # # uiResult = showResult()
             # for k in e.keys():
@@ -246,5 +279,6 @@ if __name__ == '__main__':
     ui.setupUi(Dialog)
     ui.loadInitData()
     ui.triggerEvent()
+    ui.on_draw()
     Dialog.show()
     sys.exit(app.exec_())
