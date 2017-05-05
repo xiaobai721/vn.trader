@@ -11,7 +11,7 @@ import logging.handlers
 import numpy as np
 import matplotlib.pyplot as plt
 import calendar
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from datetime import datetime, timedelta
 from pyexcel_xls import get_data
 
@@ -416,26 +416,66 @@ class PostAnalysis(object):
             return []
 
     #----------------------------------------------------------------------
-    def calculateNetCurve(self,netDict,initC):
+    def calculateNetCurve(self,netDict,initC,sign_sum):
         """计算所需的各种净值相关数据"""
         dateList = []
-        netList = []
-        outCome = {}
-        for k in netDict.keys():
-            dateList.append(k)
-        dateList.sort()
-        for date in dateList:
-            netList.append(netDict[date])
+        tree = lambda:defaultdict(tree)
 
-        diffRet = []
-        for net in netList:
-            diffRet.append(net/1.0/initC)
+        for id in netDict.values():
+            for date in id.keys():
+                if date not in dateList:
+                    dateList.append(date)
 
-        tempCaptial = np.cumsum(netList)
+        netList = tree()
+        diffRet = tree()
+        tempCapital = tree()
+        # temp = tree()
+        e = tree()
+        for id in netDict.keys():
+            for date in dateList:
+                if netDict[id].has_key(date):
+                    netList[id][date] = netDict[id][date]
+                else:
+                    netList[id][date] = 0.0
 
-        e = self.evaluatingNetCurve(diffRet)
-        e['terminalNet'] = tempCaptial[-1]
-        e['terminalRet'] = tempCaptial[-1]/initC
+                if sign_sum:
+                    if netList['sum'][date] == {}:
+                        netList['sum'][date] = 0.0
+                    netList['sum'][date] += netList[id][date]
+
+        for id in netList.keys():
+            diffRet[id] = []
+            tempCapital[id] = []
+            for net in netList[id].values():
+                diffRet[id].append(float(net)/1.0/initC)
+            x = np.cumsum(diffRet[id])
+            for i in x:
+                tempCapital[id].append(i)
+
+        # n = len(dateList)
+        for id in diffRet.keys():
+            e[id] = self.evaluatingNetCurve(diffRet[id])
+            e[id]['terminalNet'] = tempCapital[id][-1]
+            e[id]['terminalRet'] = tempCapital[id][-1]/initC
+        return dateList, tempCapital, e
+                    # dateList = []
+        # netList = []
+        # outCome = {}
+        # for k in netDict.keys():
+        #     dateList.append(k)
+        # dateList.sort()
+        # for date in dateList:
+        #     netList.append(netDict[date])
+        #
+        # diffRet = {}
+        # for net in netList:
+        #     diffRet.append(net/1.0/initC)
+        #
+        # tempCaptial = np.cumsum(netList)
+        #
+        # e = self.evaluatingNetCurve(diffRet)
+        # e['terminalNet'] = tempCaptial[-1]
+        # e['terminalRet'] = tempCaptial[-1]/initC
 
         # showN = 20
         # n = len(dateList)
@@ -469,7 +509,7 @@ class PostAnalysis(object):
         # # plt.ylim(min(tempCaptial)-10,max(tempCaptial)+10)
         # plt.show()
 
-        return e
+        # return e
     #----------------------------------------------------------------------
     def evaluatingNetCurve(self,diffRet):
         risklessR = 0
@@ -522,31 +562,18 @@ class PostAnalysis(object):
     #     return list(set(pathList))
 
     #----------------------------------------------------------------------
-    def sumNet(self,filePathList,sum_sign):
+    def sumNet(self,filePathList):
         """加总曲线净值"""
         netDict = {}
-        dateList = []
         for netf in filePathList:
             netDict[netf] = {}
             with open(netf,'rb') as f:
                 temp = f.readlines()
                 for line in temp:
-                    netDict[netf][line.split(',')[0]] = float(line.split(',')[4].strip())
-                    dateList.append(line.split(',')[0])
-        dateList = list(set(dateList))
-        dateList.sort()
-        netOut = {}
-        for d in dateList:
-            temp = []
-            for v in netDict.values():
-                try:
-                    temp.append(v[d])
-                except Exception as e:
-                    temp.append(0)
+                    netDict[netf][line.split(',')[1]] = float(line.split(',')[5].strip())
 
-            netOut[d] = sum(temp) if sum_sign else temp
 
-        return netOut
+        return netDict
 
     #----------------------------------------------------------------------
     def writeCtaLogFile(self, content):

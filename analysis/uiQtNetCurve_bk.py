@@ -12,7 +12,7 @@ import logging, os, sys
 # from datetime import datetime
 import collections
 import numpy as np
-# from operator import itemgetter
+from operator import itemgetter
 import matplotlib.pyplot as plt
 from itertools import groupby, product
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -40,16 +40,19 @@ class NetCurveManager(QtGui.QDialog):
         # super(NetCurveManager, self).__init__(parent)
         # self.setWindowTitle('NetCurve')
         self.analysisEngine = analysisEngine
+        self.path = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile'
         # Dialog = QtGui.QDialog()
         # ui = NetCurveManager()
         self.setupUi(Dialog)
         self.loadInitData()
+        self.triggerEvent()
+        Dialog.show()
         # ui.triggerEvent()
         # ui.on_draw()
         # self.show()
 
     def setupUi(self, Dialog):
-        self.path = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir,os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile'
+
         Dialog.setObjectName(_fromUtf8("NetCurve"))
         Dialog.resize(755, 515)
         self.horizontalLayoutWidget = QtGui.QWidget(Dialog)
@@ -92,7 +95,7 @@ class NetCurveManager(QtGui.QDialog):
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
 
         # horizontalLayoutWidget_2
-        self.horizontalLayoutWidget_2 = QtGui.QWidget()
+        self.horizontalLayoutWidget_2 = QtGui.QWidget(Dialog)
         self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(39, 209, 661, 241))
         self.horizontalLayoutWidget_2.setObjectName(_fromUtf8("horizontalLayoutWidget_2"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.horizontalLayoutWidget_2)
@@ -110,8 +113,8 @@ class NetCurveManager(QtGui.QDialog):
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
 
-        self.labelMetrics = QtGui.QLabel()
-        self.labelMetrics.setGeometry(QtCore.QRect(40, 150, 661, 41))
+        self.labelMetrics = QtGui.QLabel(Dialog)
+        self.labelMetrics.setGeometry(QtCore.QRect(40, 120, 661, 71))
         self.labelMetrics.setText(_fromUtf8(""))
         self.labelMetrics.setObjectName(_fromUtf8("labelMetrics"))
         #
@@ -130,49 +133,53 @@ class NetCurveManager(QtGui.QDialog):
     def triggerEvent(self):
         self.ButtonStart.clicked.connect(self.startCalculate)
     # ----------------------------------------------------------------------
-    def on_draw(self, dateList = None, tempCaptial = None):
+    def on_draw(self, dateList, tempCapital):
         """ Redraws the figure
         """
         self.figure.clf()
+        # ax = self.figure
         ax = self.figure.add_subplot(111)
-        dateList = np.linspace(-np.pi, np.pi, 256, endpoint=True)
-        dateList1 = np.linspace(-np.pi, np.pi, 50, endpoint=True)
-        tempCaptial = np.cos(dateList)
-        tempCaptial1 = np.sin(dateList1)
         showN = 20
         n = len(dateList)
-        m = len(dateList1)
-        # fig = plt.figure(figsize=(8, 4))
+        variables = locals()
+        # # ax.xlabel("Date")
+        # # ax.ylabel("Net")
+        # # ax.title("Selected Net Curve")
+        # ax.grid()
+        labels = []
+        for index, i in enumerate(tempCapital.keys()):
+            if 'sum' not in i:
+                labels.append(i.split('\\')[-1][:-4])
+            else:
+                labels.append(i)
+            variables['var_%s' % index], = ax.plot(range(n), tempCapital[i], label=labels)
 
-        # ax = plt.gca()
-        if n < showN:
-            ax.set_xticks(np.linspace(0, n - 1, n))
-            ax.set_xticklabels(dateList)
-        else:
-            ax.set_xticks(np.linspace(0, n - 1, showN))
-            index = list(np.linspace(0, n - 1, showN))
-            for i in range(len(index)):
-                index[i] = int(index[i])
-            index = list(set(index))
-            if index[-1] < n - 1:
-                index.append(n - 1)
-            dateList1 = []
-            for i in index:
-                dateList1.append(dateList[i])
-            ax.set_xticklabels(dateList1)
+        # a = tuple(m for m in variables.keys() if 'var_' in m])
+        # b = tuple(labels.sort())
+        # print a,b
+        ax.legend()
 
-        xlabels = ax.get_xticklabels()
-        for xl in xlabels:
-            xl.set_rotation(90)
-        plt.xlabel("Date")
-        plt.ylabel("Net")
-        plt.title("Selected Net Curve")
-        plt.grid()
-        a, = ax.plot(range(n), tempCaptial, label="netCurve")
-        b, = ax.plot(range(m), tempCaptial1, label="test")
-        ax.legend((a,b),("123","456"))
+        # for test
+        # a, = ax.plot(range(4), [2,4,5,6], label="netCurve")
+        # b, = ax.plot(range(4), [0,1,2,3], label="test")
+        # ax.legend((a,b), ("abc","dge"))
+        self.canvas.draw_idle()
 
-        self.canvas.draw()
+    # ----------------------------------------------------------------------
+    def showMetrics(self,e):
+        str = ''
+        # for i in range(3):
+        #     str = str.join('abc' + '\n')
+
+        for i in e.keys():
+            if 'sum' in i:
+                labels = i
+            else:
+                labels = i.split('\\')[-1][:-4]
+            str = str + "Instance=%s annualRet=%.2f sharp=%.2f sortino=%.2f maxDrawdown=%.2f meanDrawdown=%.2f maxDrawdownDay=%.2f meanDrawdownDay=%.2f\n"\
+                  %(labels,e[i]['annualRet'],e[i]['sharp'],e[i]['sortino'],e[i]['maxDrawdown'],e[i]['meanDrawdown'],e[i]['maxDrawdownDay'],e[i]['meanDrawdownDay'])
+        # print str
+        self.labelMetrics.setText(str)
     # ----------------------------------------------------------------------
     def loadInitData(self):
         tree = lambda: collections.defaultdict(tree)
@@ -239,37 +246,35 @@ class NetCurveManager(QtGui.QDialog):
                     print e
 
         # return set(pathList)
-        for i in list(set(pathList)):
+        for i in pathList:
             if i != []:
-                filePathList.append(str(self.path + i[0]['name']))
+                filePathList.append(str(self.path + '\\' + i[0]['name']))
 
-        return filePathList
+        func = lambda g, k: g if k in g else g + [k]
+        return reduce(func, [[], ] + filePathList)
     # ----------------------------------------------------------------------
     def startCalculate(self):
-
+        acct, con = [], []
         if self.cbAccount.currentText() != {}:
-            acct = self.cbAccount.currentText()
+            acct.append(str(self.cbAccount.currentText()))
         else:
             QtGui.QMessageBox.warning(self, u'Warning', u'请选择账户！')
             acct = None
 
-        con = self.cbContract.currentText() if self.cbContract.currentText() != {} else None
-        strategyList = [a for a in self.names.keys() if 'self.s_' in a and self.names[a].isChecked()]
+        con.append(str(self.cbContract.currentText()) if self.cbContract.currentText() != {} else None)
+        strategyList = [a.split('_')[1] for a in self.names.keys() if 'self.s_' in a and self.names[a].isChecked()]
 
-        produceList = product(list(acct),list(con),strategyList) if con != None else product(list(acct),strategyList)
+        produceList = product(acct,con,strategyList) if con != None else product(list(acct),strategyList)
         produceList = list(produceList)
         try:
-            sum_sign = True if self.s_Sum.isChecked() else False
-            e = self.analysisEngine.calculateNetCurve(self.analysisEngine.sumNet(self.pathIter(produceList), sum_sign),int(self.lineAmount.text()))
-            # self.on_draw()
-            # self.showList.updateList('')
-            # # uiResult = showResult()
-            # for k in e.keys():
-            #     self.showList.updateList(k+':'+str(e[k]))
-            # # uiResult.show()
-
+            sum_sign = True if self.names['self.s_Sum'].isChecked() else False
+            dateList, tempCapital, e = self.analysisEngine.calculateNetCurve(self.analysisEngine.sumNet(self.pathIter(produceList)),int(self.lineAmount.text()),sum_sign)
+            self.on_draw(dateList, tempCapital)
+            self.showMetrics(e)
+            print 'done!'
         except Exception as e:
-                print e
+            print e
+
 
 if __name__ == '__main__':
     app = 0
