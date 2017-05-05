@@ -8,7 +8,7 @@ from uiBasicWidget import QtGui, QtCore, BasicCell
 from eventEngine import *
 import logging, os, sys
 from datetime import datetime
-from analysis.uiQtNetCurve_bk import NetCurveManager
+from analysis.uiQtNetCurve import NetCurveManager
 
 class EventSelection(QtGui.QWidget):
     """分析功能选择"""
