@@ -35,12 +35,15 @@ except AttributeError:
 
 class NetCurveManager(QtGui.QDialog):
 
-    def __init__(self, analysisEngine, Dialog, parent = None):
+    def __init__(self, analysisEngine, Dialog, path, parent = None):
         QtGui.QDialog.__init__(self, parent)  # 调用父类初始化方法
         # super(NetCurveManager, self).__init__(parent)
         # self.setWindowTitle('NetCurve')
         self.analysisEngine = analysisEngine
-        self.path = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile'
+        if 'Curr' in path:
+            self.path = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile'
+        else:
+            self.path = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile\\his'
         # Dialog = QtGui.QDialog()
         # ui = NetCurveManager()
         self.setupUi(Dialog)
@@ -54,9 +57,9 @@ class NetCurveManager(QtGui.QDialog):
     def setupUi(self, Dialog):
 
         Dialog.setObjectName(_fromUtf8("NetCurve"))
-        Dialog.resize(755, 515)
+        Dialog.resize(1012, 689)
         self.horizontalLayoutWidget = QtGui.QWidget(Dialog)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(40, 30, 661, 80))
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(40, 30, 941, 101))
         self.horizontalLayoutWidget.setObjectName(_fromUtf8("horizontalLayoutWidget"))
         self.horizontalLayout = QtGui.QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
@@ -67,7 +70,7 @@ class NetCurveManager(QtGui.QDialog):
         font.setUnderline(False)
         font.setStrikeOut(False)
         font.setStyleStrategy(QtGui.QFont.PreferDefault)
-        self.labelAcctName.setFont(font)
+        # self.labelAcctName.setFont(font)
         self.labelAcctName.setObjectName(_fromUtf8("labelAcctName"))
         self.horizontalLayout.addWidget(self.labelAcctName)
         self.cbAccount = QtGui.QComboBox(self.horizontalLayoutWidget)
@@ -78,6 +81,7 @@ class NetCurveManager(QtGui.QDialog):
         self.horizontalLayout.addWidget(self.labelContract)
         self.cbContract = QtGui.QComboBox(self.horizontalLayoutWidget)
         self.cbContract.setObjectName(_fromUtf8("cbContract"))
+        self.cbContract.addItem('')
         self.horizontalLayout.addWidget(self.cbContract)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
@@ -86,17 +90,18 @@ class NetCurveManager(QtGui.QDialog):
         self.horizontalLayout.addWidget(self.labelAmount)
         self.lineAmount = QtGui.QLineEdit(self.horizontalLayoutWidget)
         self.lineAmount.setObjectName(_fromUtf8("lineAmount"))
+        self.lineAmount.setText('10000000')
         self.horizontalLayout.addWidget(self.lineAmount)
         # checkbox
         self.verticalLayoutWidget = QtGui.QWidget()
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(600, 230, 101, 231))
+        # self.verticalLayoutWidget.setGeometry(QtCore.QRect(600, 230, 101, 231))
         self.verticalLayoutWidget.setObjectName(_fromUtf8("verticalLayoutWidget"))
         self.verticalLayout = QtGui.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
 
         # horizontalLayoutWidget_2
         self.horizontalLayoutWidget_2 = QtGui.QWidget(Dialog)
-        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(39, 209, 661, 241))
+        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(40, 330, 941, 331))
         self.horizontalLayoutWidget_2.setObjectName(_fromUtf8("horizontalLayoutWidget_2"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.horizontalLayoutWidget_2)
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
@@ -113,10 +118,12 @@ class NetCurveManager(QtGui.QDialog):
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
 
-        self.labelMetrics = QtGui.QLabel(Dialog)
-        self.labelMetrics.setGeometry(QtCore.QRect(40, 120, 661, 71))
-        self.labelMetrics.setText(_fromUtf8(""))
-        self.labelMetrics.setObjectName(_fromUtf8("labelMetrics"))
+        self.editMetrics = QtGui.QTextEdit(Dialog)
+        self.editMetrics.setGeometry(QtCore.QRect(50, 140, 921, 171))
+        self.editMetrics.setText(_fromUtf8(""))
+        self.editMetrics.setObjectName(_fromUtf8("editMetrics"))
+        self.editMetrics.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.editMetrics.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         #
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -179,7 +186,7 @@ class NetCurveManager(QtGui.QDialog):
             str = str + "Instance=%s annualRet=%.2f sharp=%.2f sortino=%.2f maxDrawdown=%.2f meanDrawdown=%.2f maxDrawdownDay=%.2f meanDrawdownDay=%.2f\n"\
                   %(labels,e[i]['annualRet'],e[i]['sharp'],e[i]['sortino'],e[i]['maxDrawdown'],e[i]['meanDrawdown'],e[i]['maxDrawdownDay'],e[i]['meanDrawdownDay'])
         # print str
-        self.labelMetrics.setText(str)
+        self.editMetrics.setText(str)
     # ----------------------------------------------------------------------
     def loadInitData(self):
         tree = lambda: collections.defaultdict(tree)
@@ -239,16 +246,17 @@ class NetCurveManager(QtGui.QDialog):
         for i in assembledList:
             try:
                 if len(i) > 2:
-                    pathList.append(filter(lambda x:x['account'] == i[0] and x['contract'] == i[1] and x['strategy'] == i[2],self.fileName))
+                    pathList.extend(filter(lambda x:x['account'] == i[0] and x['contract'] == i[1] and x['strategy'] == i[2],self.fileName))
                 else:
-                    pathList.append(filter(lambda x: x['account'] == i[0] and x['strategy'] == i[1],self.fileName))
+                    pathList.extend(filter(lambda x: x['account'] == i[0] and x['strategy'] == i[1],self.fileName))
+
             except Exception as e:
                     print e
 
         # return set(pathList)
         for i in pathList:
             if i != []:
-                filePathList.append(str(self.path + '\\' + i[0]['name']))
+                filePathList.append(str(self.path + '\\' + i['name']))
 
         func = lambda g, k: g if k in g else g + [k]
         return reduce(func, [[], ] + filePathList)
@@ -264,14 +272,14 @@ class NetCurveManager(QtGui.QDialog):
         con.append(str(self.cbContract.currentText()) if self.cbContract.currentText() != {} else None)
         strategyList = [a.split('_')[1] for a in self.names.keys() if 'self.s_' in a and self.names[a].isChecked()]
 
-        produceList = product(acct,con,strategyList) if con != None else product(list(acct),strategyList)
+        produceList = product(acct,con,strategyList) if con != [''] else product(list(acct),strategyList)
         produceList = list(produceList)
         try:
             sum_sign = True if self.names['self.s_Sum'].isChecked() else False
             dateList, tempCapital, e = self.analysisEngine.calculateNetCurve(self.analysisEngine.sumNet(self.pathIter(produceList)),int(self.lineAmount.text()),sum_sign)
             self.on_draw(dateList, tempCapital)
             self.showMetrics(e)
-            print 'done!'
+            # print 'done!'
         except Exception as e:
             print e
 

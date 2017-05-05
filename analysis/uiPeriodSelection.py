@@ -88,7 +88,7 @@ class EventSelection(QtGui.QWidget):
 
         try:
             self.Dialog = QtGui.QDialog()
-            self.widgetDict['netCurve'] = NetCurveManager(self.analysisEngine, self.Dialog, parent=self)
+            self.widgetDict['netCurve'] = NetCurveManager(self.analysisEngine, self.Dialog, sign, parent=self)
             # self.Dialog.show()
         except Exception, e:
             print e
