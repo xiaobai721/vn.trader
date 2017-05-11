@@ -10,21 +10,21 @@ from eventEngine import *
 
 
 ########################################################################
-class RmSpinBox(QtGui.QSpinBox):
-    """调整参数用的数值框"""
-
-    #----------------------------------------------------------------------
-    def __init__(self, value):
-        """Constructor"""
-        super(RmSpinBox, self).__init__()
-
-        self.setMinimum(0)
-        self.setMaximum(1000000)
-        
-        self.setValue(value)
-    
-    
-
+# class RmSpinBox(QtGui.QSpinBox):
+#     """调整参数用的数值框"""
+#
+#     #----------------------------------------------------------------------
+#     def __init__(self, value):
+#         """Constructor"""
+#         super(RmSpinBox, self).__init__()
+#
+#         # self.setMinimum(0)
+#         # self.setMaximum(1000000)
+#
+#         self.setValue(value)
+#
+#
+#
 
 ########################################################################
 class RmLine(QtGui.QFrame):
@@ -62,64 +62,70 @@ class RmEngineManager(QtGui.QWidget):
         
         # 设置界面
         self.buttonSwitchEngineStatus = QtGui.QPushButton(u'风控模块未启动')
+
+        # self.spinaccountMarginRatio = RmSpinBox(self.rmEngine.accountMarginRatio)
+        # self.spintradeCountLimit = RmSpinBox(self.rmEngine.tradeCountLimit)
+        # self.spinstrategyInstanceOpenLimit = RmSpinBox(self.rmEngine.strategyInstanceOpenLimit)
+        # self.spinstrategyInstancePositionLimit = RmSpinBox(self.rmEngine.strategyInstancePositionLimit)
+        # self.spincontractPositionLimit = RmSpinBox(self.rmEngine.contractPositionLimit)
         
-        self.spinOrderFlowLimit = RmSpinBox(self.rmEngine.orderFlowLimit)
-        self.spinOrderFlowClear = RmSpinBox(self.rmEngine.orderFlowClear)
-        self.spinOrderSizeLimit = RmSpinBox(self.rmEngine.orderSizeLimit)
-        self.spinTradeLimit = RmSpinBox(self.rmEngine.tradeLimit)
-        self.spinWorkingOrderLimit = RmSpinBox(self.rmEngine.workingOrderLimit)
+        # buttonClearOrderFlowCount = QtGui.QPushButton(u'清空流控计数')
+        # buttonClearTradeCount = QtGui.QPushButton(u'清空累计交易计数')
+        # buttonSaveSetting = QtGui.QPushButton(u'保存设置')
         
-        buttonClearOrderFlowCount = QtGui.QPushButton(u'清空流控计数')
-        buttonClearTradeCount = QtGui.QPushButton(u'清空总成交计数')
-        buttonSaveSetting = QtGui.QPushButton(u'保存设置')
+        # Label = QtGui.QLabel
+        # grid = QtGui.QGridLayout()
+        # grid.addWidget(Label(u'工作状态'), 0, 0)
+        # grid.addWidget(self.buttonSwitchEngineStatus, 0, 1)
+        # grid.addWidget(RmLine(), 1, 0, 1, 2)
+        # grid.addWidget(Label(u'账户保证金比例上限'), 2, 0)
+        # grid.addWidget(self.spinaccountMarginRatio, 2, 1)
+        # # grid.addWidget(Label(u'流控清空（秒）'), 3, 0)
+        # # grid.addWidget(self.spinOrderFlowClear, 3, 1)
+        # grid.addWidget(RmLine(), 3, 0, 1, 2)
+        # grid.addWidget(Label(u'单日累计交易次数上限'), 4, 0)
+        # grid.addWidget(self.spintradeCountLimit, 4, 1)
+        # grid.addWidget(RmLine(), 5, 0, 1, 2)
+        # grid.addWidget(Label(u'单策略实例开仓上限'), 6, 0)
+        # grid.addWidget(self.spinstrategyInstanceOpenLimit, 6, 1)
+        # grid.addWidget(RmLine(), 7, 0, 1, 2)
+        # grid.addWidget(Label(u'单策略实例持仓上限'), 8, 0)
+        # grid.addWidget(self.spinstrategyInstancePositionLimit, 8, 1)
         
-        Label = QtGui.QLabel
+        # hbox = QtGui.QHBoxLayout()
+        # hbox.addWidget(buttonSwitchEngineStatus)
+        # hbox.addWidget(buttonClearTradeCount)
+        # hbox.addStretch()
+        # hbox.addWidget(buttonSaveSetting)
+        
+        # vbox = QtGui.QVBoxLayout()
+        # vbox.addLayout(grid)
+        # vbox.addLayout(hbox)
+        # self.setLayout(vbox)
+        
+        # # 连接组件信号
+        # self.spinaccountMarginRatio.valueChanged.connect(self.rmEngine.setAccountMarginRatio)
+        # self.spintradeCountLimit.valueChanged.connect(self.rmEngine.setTradeCountLimit)
+        # self.spinstrategyInstanceOpenLimit.valueChanged.connect(self.rmEngine.setStrategyInstanceOpenLimit)
+        # self.spinstrategyInstancePositionLimit.valueChanged.connect(self.rmEngine.setStrategyInstancePositionLimit)
+        # self.spincontractPositionLimit.valueChanged.connect(self.rmEngine.setContractPositionLimit)
+        #
+        self.buttonSwitchEngineStatus.clicked.connect(self.switchEngineStatus)
+        # buttonClearOrderFlowCount.clicked.connect(self.rmEngine.clearOrderFlowCount)
+        # buttonClearTradeCount.clicked.connect(self.rmEngine.clearTradeCount)
+        # buttonSaveSetting.clicked.connect(self.rmEngine.saveSetting)
+        buttonHBox = QtGui.QHBoxLayout()
+        buttonHBox.addStretch()
+        buttonHBox.addWidget( self.buttonSwitchEngineStatus)
         grid = QtGui.QGridLayout()
-        grid.addWidget(Label(u'工作状态'), 0, 0)
-        grid.addWidget(self.buttonSwitchEngineStatus, 0, 1)
-        grid.addWidget(RmLine(), 1, 0, 1, 2)
-        grid.addWidget(Label(u'流控上限'), 2, 0)
-        grid.addWidget(self.spinOrderFlowLimit, 2, 1)
-        grid.addWidget(Label(u'流控清空（秒）'), 3, 0)
-        grid.addWidget(self.spinOrderFlowClear, 3, 1)
-        grid.addWidget(RmLine(), 4, 0, 1, 2)
-        grid.addWidget(Label(u'单笔委托上限'), 5, 0)
-        grid.addWidget(self.spinOrderSizeLimit, 5, 1)
-        grid.addWidget(RmLine(), 6, 0, 1, 2)
-        grid.addWidget(Label(u'总成交上限'), 7, 0)
-        grid.addWidget(self.spinTradeLimit, 7, 1)
-        grid.addWidget(RmLine(), 8, 0, 1, 2)
-        grid.addWidget(Label(u'活动订单上限'), 9, 0)
-        grid.addWidget(self.spinWorkingOrderLimit, 9, 1)
-        
-        hbox = QtGui.QHBoxLayout()
-        hbox.addWidget(buttonClearOrderFlowCount)
-        hbox.addWidget(buttonClearTradeCount)
-        hbox.addStretch()
-        hbox.addWidget(buttonSaveSetting)
-        
-        vbox = QtGui.QVBoxLayout()
-        vbox.addLayout(grid)
-        vbox.addLayout(hbox)
-        self.setLayout(vbox)
-        
-        # 连接组件信号
-        self.spinOrderFlowLimit.valueChanged.connect(self.rmEngine.setOrderFlowLimit)
-        self.spinOrderFlowClear.valueChanged.connect(self.rmEngine.setOrderFlowClear)
-        self.spinOrderSizeLimit.valueChanged.connect(self.rmEngine.setOrderSizeLimit)
-        self.spinTradeLimit.valueChanged.connect(self.rmEngine.setTradeLimit)
-        self.spinWorkingOrderLimit.valueChanged.connect(self.rmEngine.setWorkingOrderLimit)
-        
-        self.buttonSwitchEngineStatus.clicked.connect(self.switchEngineSatus)
-        buttonClearOrderFlowCount.clicked.connect(self.rmEngine.clearOrderFlowCount)
-        buttonClearTradeCount.clicked.connect(self.rmEngine.clearTradeCount)
-        buttonSaveSetting.clicked.connect(self.rmEngine.saveSetting)
-        
+        grid.addLayout(buttonHBox, 0, 0, 1, 1)
+        self.setLayout(grid)
+
         # 设为固定大小
         self.setFixedSize(self.sizeHint())
         
     #----------------------------------------------------------------------
-    def switchEngineSatus(self):
+    def switchEngineStatus(self):
         """控制风控引擎开关"""
         self.rmEngine.switchEngineStatus()
         self.updateEngineStatus()

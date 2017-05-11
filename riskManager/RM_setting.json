@@ -1,8 +1,37 @@
 {
-    "orderFlowClear": 1, 
-    "workingOrderLimit": 20, 
-    "tradeLimit": 100, 
-    "orderSizeLimit": 10, 
-    "active": true, 
-    "orderFlowLimit": 10
+    "account1":
+    {
+    "contractPositionLimit":
+    {
+        "long": 10,
+        "short": 10
+    },
+    "accountMarginRatio": 30,
+    "active": true,
+    "tradeCountLimit": 100
+    },
+
+    "account2":
+    {
+    "contractPositionLimit":
+    {
+        "long": 10,
+        "short": 10
+    },
+    "accountMarginRatio": 30,
+    "active": true,
+    "tradeCountLimit": 100
+    },
+
+    "account3":
+    {
+    "contractPositionLimit":
+    {
+        "long": 10,
+        "short": 10
+    },
+    "accountMarginRatio": 30,
+    "active": true,
+    "tradeCountLimit": 100
+    }
 }
