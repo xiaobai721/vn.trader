@@ -27,28 +27,20 @@ class PostAnalysis(object):
     """日志拆分分析"""
 
     ctaEngineLogFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\temp'
-    ctaEngineTradeCacheFile = os.getcwd() + '/tradeCache'
+    # ctaEngineTradeCacheFile = os.getcwd() + '/tradeCache'
     ctaSettingFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\algoConfig'
 
     ctaCurrPosFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir,os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile'
-    ctaHisPosFile = ctaCurrPosFile + '\\' + 'hisPosFile'
+    # ctaHisPosFile = ctaCurrPosFile + '\\' + 'hisPosFile'
     # statementFile = os.getcwd() + '/statement'
 
     #---------------------------------------------------------------------
     def __init__(self):
         """初始化"""
-        # startTime = '20170419'
-        # endTime = '20170419'
-        # 当前日期
         self.today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         # 单策略log字典
         self.singleStrategyLog = {}
-        # # 分析起始时间
-        # self.startTime = endTime+'-210000'
-        # 分析结束时间
-        # self.endTime = endTime+'-090000'
-        # self.startTime = self.endTime
-        # 捕捉字符串
+
         self.str1 = u'成交回报'
         self.str2 = u'标的'
         self.str3 = u'非系统'
@@ -68,9 +60,7 @@ class PostAnalysis(object):
 
         self.logger1 = logging.getLogger('statementLogger')
         self.logger1.setLevel(logging.DEBUG)
-        # fh = logging.handlers.RotatingFileHandler(self.statementFile+'/statementLog', mode='a', maxBytes=1024*1024)
         ch = logging.StreamHandler()
-        # self.logger1.addHandler(fh)
         self.logger1.addHandler(ch)
 
         self.loadSymbolInformation()
@@ -90,11 +80,6 @@ class PostAnalysis(object):
     #---------------------------------------------------------------------
     def loadLog(self,dirname):
         """加载log文件"""
-        # dateList = os.listdir(self.ctaEngineLogFile)
-        # self.endTime = endTime + '-090000'
-        # self.startTime = self.endTime
-        # startStr = self.startTime
-        # endStr = self.endTime
         d = dirname
         self.tradeList = OrderedDict()
         self.endTime = dirname
@@ -102,9 +87,6 @@ class PostAnalysis(object):
         self.sTradedir = ['\AccountInstanceTradeList','\ContractInstanceTradeList']
         self.sCtaFile = ['\ctaLog2','\ctaLog2']
         for i in range(2):
-            # for d in dateList:
-                # if d >= startStr and d <= endStr:
-                    # 创建策略实例log存储文件夹
             sLogPath = self.ctaEngineLogFile+'\\'+d+self.sLogdir[i]
             if not os.path.exists(sLogPath):
                 os.makedirs(sLogPath)
@@ -162,15 +144,25 @@ class PostAnalysis(object):
                             self.tradeList[self.sLogdir[i][1:]].append(temp)
                     else:
                         pass
-            # self.writePosFile(d,self.tradeList)
             self.writeTradeList(d,self.tradeList) #ctaTradeList.xls
     #----------------------------------------------------------------------
     def writePosFile(self,date,posHolding):
-        # for line in range(len(posHolding)):
-        posPath =  self.ctaEngineLogFile + '/ctaPosFile' + '//' + posHolding[0] + '.txt'
+
+        Conid = posHolding[1]
+        posPath =  self.ctaEngineLogFile + '/ctaPosFile' + '//' + posHolding[0] + '//' + Conid + '.txt'
+        truncateSign = False
+        if os.path.exists(posPath):
+            with open(posPath, 'rb') as f:
+                POS = f.readline()
+                if POS:
+                    if not self.compare_dateTime(posHolding[2], POS.split(',')[1]):
+                        truncateSign = True
+
         try:
             with open(posPath,'a') as f:
-                s = ','.join([str(x) for x in posHolding])
+                if truncateSign:
+                    f.truncate()
+                s = ','.join([str(x) for x in posHolding[1:]])
                 f.write( s + '\n')
         except Exception as e:
             print e
@@ -210,55 +202,27 @@ class PostAnalysis(object):
         except Exception as e:
             # print logList
             return
-
     # ----------------------------------------------------------------------
-    # def clearPosHisFile(self,id):
-    #     """清理标的历史持仓信息"""
-    #     d1 = datetime(2017,4,1)
-    #     d2 = datetime(2017,4,10)
-    #     posPath = self.ctaEngineLogFile + '/ctaPosFile' + '//' + id + '.txt'
-    #     personaltype = np.dtype({'names': ['id', 'date', 'TLong', 'TShort', 'YLong', 'YShort'],
-    #                              'formats': ['S40', 'S20', 'f', 'f', 'f', 'f']})
-    #     curr_day = d1
-    #     data = []
-    #     if os.path.exists(posPath):
-    #         with open(posPath,'r') as f:
-    #             OFile = np.loadtxt(f,dtype = personaltype,delimiter=",")
-    #             if OFile.shape:
-    #                 OFile = OFile.tolist()
-    #                 while (d2 - curr_day).days > 0:
-    #                     for line in OFile:
-    #                         if line[1][:9] == curr_day.strftime('%Y%m%d'):
-    #                             OFile.remove(line)
-    #                     curr_day = curr_day + timedelta(days = 1)
-    #             # data_OFile = OFile
-    #         for i in range(len(OFile)):
-    #             s = ','.join([str(x) for x in OFile[i]])
-    #             data.append(s)
-    #         with open(posPath, 'w') as f:
-    #             # data = [line + '\n' for line in data]
-    #             f.writelines(data)
-
-    # ----------------------------------------------------------------------
-    def loadPosHolding(self,id):
+    def loadPosHolding(self,id,conid):
         """载入当前id的前一日持仓信息"""
-        personaltype = np.dtype({'names': ['id','date', 'Long', 'Short','lastPrice','profit'],
-                               'formats': ['S40','S20','f', 'f','f','f']})
-
-        if not os.path.exists(self.ctaEngineLogFile+'\ctaPosFile'):
-            os.makedirs(self.ctaEngineLogFile+'\ctaPosFile')
+        personaltype = np.dtype({'names': ['id', 'date', 'Long', 'Short', 'lastPrice', 'profit'],
+                                 'formats': ['S40', 'S20', 'f', 'f', 'f', 'f']})
+        filePath = self.ctaEngineLogFile + '\ctaPosFile' + '\\' + str(id)
+        if not os.path.exists(filePath):
+            os.makedirs(filePath)
         try:
-            with open(self.ctaEngineLogFile+'\ctaPosFile' + '\''+id + '.txt','rb') as f:
+            with open(filePath + '\\' + str(conid) + '.txt', 'rb') as f:
                 POSFile = np.loadtxt(f, dtype=personaltype, delimiter=",")
                 f.close()
         except Exception as e:
-            POSFile = np.array([[id,'0', 0.0, 0.0, 0.0, 0.0]])
+            POSFile = np.array([[conid, '0', 0.0, 0.0, 0.0, 0.0]])
 
         try:
             POSFile = POSFile[-1].tolist()
         except:
             POSFile = POSFile.tolist()
         return POSFile
+
     #----------------------------------------------------------------------
     def loadTradeHolding(self,lastPrice):
         """读取交易记录"""
@@ -274,48 +238,52 @@ class PostAnalysis(object):
             if n > 0:
                 ail[n].append(ail[n][1] + '_' + ail[n][2])
         ail = ail[1:]
-        posHolding = [] #记录所有标的持仓信息
-        IDList = []
-        prePrice = {} #记录标的前一日价格
+        posHolding = [] #记录所有标的持仓信息[InstID,ConID,date,long,short,lastprice,profit]
+        IDList = [] #InstID + Conid 作为ID标志
+
+        ypos = {} #记录标的前一日posholding
         for line in range(len(ail)):
-            if ail[line][-1] not in IDList:
-                ypos = self.loadPosHolding(ail[line][-1])
-                prePrice[ypos[0]] = float(ypos[-2])
-                ypos = ypos[:4]
-                IDList.append(ail[line][-1])
+            InstID = ail[line][-1]
+            ConID = ail[line][4]
+            ypos1 = []
+            if str(InstID) + '_' + str(ConID) not in IDList:
+                if not ypos.has_key(InstID):
+                    ypos[InstID] = {}
+                ypos[InstID][ConID] = self.loadPosHolding(InstID, ConID)
+                ypos1.append(InstID)
+                ypos1.extend(ypos[InstID][ConID][:4])
+                IDList.append(str(InstID) + '_' + str(ConID))
             else:
                 for idx, val in enumerate(posHolding):
-                    if ail[line][-1] in val[0]:
-                        ypos = val[:4]
+                    if InstID in val[0] and ConID in val[1]:
+                        ypos1 = val[:5]
                         del posHolding[idx]
 
             temp = []
-            temp.extend(ypos)
-            temp[1] = self.endTime[:8] #修改日期
+            temp.extend(ypos1)
+            temp[2] = self.endTime[:8] #修改日期
 
             if unicode('多',"utf8") in ail[line][5]:
                 if unicode('开仓',"utf8") in ail[line][6]:
-                    temp[2] = float(temp[2]) + float(ail[line][7])
+                    temp[3] = float(temp[3]) + float(ail[line][7])
                 elif unicode('平',"utf8") in ail[line][6]:
-                    continue
-                    # temp[2] = float(temp[2]) - float(ail[line][7])
+                    # continue
+                    temp[3] = float(temp[3]) - float(ail[line][7])
 
             elif unicode('空',"utf8") in ail[line][5]:
                 if unicode('开仓',"utf8") in ail[line][6]:
-                    temp[3] = float(temp[3]) + float(ail[line][7])
+                    temp[4] = float(temp[4]) + float(ail[line][7])
                 elif unicode('平',"utf8") in ail[line][6]:
-                    continue
-                    # temp[3] = float(temp[3]) - float(ail[line][7])
+                    # continue
+                    temp[4] = float(temp[4]) - float(ail[line][7])
 
-            symbol = ''.join(re.findall(r'[a-z]', ail[line][4].lower()))
-            lastPriceData = self.qryLastTick(LTKdata,symbol)
+            lastPriceData = self.qryLastTick(LTKdata,ConID)
             temp.append(lastPriceData)
             temp.append(0.0)
             posHolding.append(temp)
         for i in posHolding:
-            trade = self.initTradeList()
-            symbol = i[0].split('_',2)[2]
-            TProfit = self.calculateSingeldayCapital(float(i[2]),float(i[3]),trade,prePrice[i[0]],i[4],symbol)
+            trade = self.initTradeList(i[0], i[1], ail)
+            TProfit = self.calculateSingeldayCapital(float(ypos[i[0]][i[1]][2]),float(ypos[i[0]][i[1]][3]),trade,float(ypos[i[0]][i[1]][4]),i[5],i[1])
             i[5] = TProfit
             self.writePosFile(self.endTime,i)
     # ----------------------------------------------------------------------
@@ -329,16 +297,16 @@ class PostAnalysis(object):
         except:
             return 0.0
     # ----------------------------------------------------------------------
-    def initTradeList(self):
+    def initTradeList(self,id,conid,ail):
         tradeList = []
-        for line in self.tradeList['AccountInstanceLog'][1:]:
-            tradeList.append(TempTradeData(line[8],line[7],line[6],line[5],line[0],line[4]))
+        for line in ail:
+            if line[1] + '_' + line[2] == id and line[4] == conid:
+                tradeList.append(TempTradeData(line[8],line[7],line[6],line[5],line[0],line[4]))
         return tradeList
     # ----------------------------------------------------------------------
     def calculateSingeldayCapital(self, longPos, shortPos, tradeList, previousPrice, currentPrice,symbolO):
         """计算单个标的,单日资产权益"""
 
-        # symbol = ''.join(re.findall(r'[a-z]', symbolO.lower()))
         tempCaptial = []
         symbol = ''.join(re.findall(r'[a-z]', symbolO.lower()))
         cSymbolInfo = self.symbolInformation[symbol]
@@ -458,58 +426,6 @@ class PostAnalysis(object):
             e[id]['terminalNet'] = tempCapital[id][-1]
             e[id]['terminalRet'] = tempCapital[id][-1]/initC
         return dateList, tempCapital, e
-                    # dateList = []
-        # netList = []
-        # outCome = {}
-        # for k in netDict.keys():
-        #     dateList.append(k)
-        # dateList.sort()
-        # for date in dateList:
-        #     netList.append(netDict[date])
-        #
-        # diffRet = {}
-        # for net in netList:
-        #     diffRet.append(net/1.0/initC)
-        #
-        # tempCaptial = np.cumsum(netList)
-        #
-        # e = self.evaluatingNetCurve(diffRet)
-        # e['terminalNet'] = tempCaptial[-1]
-        # e['terminalRet'] = tempCaptial[-1]/initC
-
-        # showN = 20
-        # n = len(dateList)
-        #
-        # fig = plt.figure(figsize=(8,4))
-        # plt.plot(range(n),tempCaptial,label="netCurve",color="red",linewidth=2,linestyle="-", marker="o")
-        # ax = plt.gca()
-        # if n < showN:
-        #     ax.set_xticks(np.linspace(0,n-1,n))
-        #     ax.set_xticklabels(dateList)
-        # else:
-        #     ax.set_xticks(np.linspace(0,n-1,showN))
-        #     index = list(np.linspace(0,n-1,showN))
-        #     for i in range(len(index)):
-        #         index[i] = int(index[i])
-        #     index = list(set(index))
-        #     if index[-1] < n-1:
-        #         index.append(n-1)
-        #     dateList1 = []
-        #     for i in index:
-        #         dateList1.append(dateList[i])
-        #     ax.set_xticklabels(dateList1)
-        #
-        # xlabels = ax.get_xticklabels()
-        # for xl in xlabels:
-        #     xl.set_rotation(90)
-        # plt.xlabel("Date")
-        # plt.ylabel("Net")
-        # plt.title("Selected Net Curve")
-        # plt.grid()
-        # # plt.ylim(min(tempCaptial)-10,max(tempCaptial)+10)
-        # plt.show()
-
-        # return e
     #----------------------------------------------------------------------
     def evaluatingNetCurve(self,diffRet):
         risklessR = 0
@@ -536,31 +452,7 @@ class PostAnalysis(object):
         e['meanDrawdown'] = np.mean(drawdown)*-100
         e['maxDrawdownDay'] = max(drawdownDay)
         e['meanDrawdownDay'] = np.mean(drawdownDay)
-        # e['totalHoldingDay'] = len([x for x in self.dayCapital if x != 0])/len(self.dayCapital)
-
         return e
-
-    #----------------------------------------------------------------------
-    # def genNetData(self,path):
-    #     """生成净值曲线数据"""
-    #     if os.path.isfile(path):
-    #         netDict = self.sumNet([path])
-    #     else:
-    #         netDict = self.sumNet(self.pathIter(path))
-    #     return netDict  # netDict以日期为key，净值为value的字典，不包含任何策略信息
-
-    #----------------------------------------------------------------------
-    # def pathIter(self,path):
-    #     """文件查询迭代函数"""
-    #     pathList = []
-    #     path1 = os.listdir(path)
-    #     for p in path1:
-    #         if os.path.isfile(path+'/'+p):
-    #             pathList.append(path+'/'+p)
-    #         else:
-    #             pathList = pathList + self.pathIter(path+'/'+p)
-    #     return list(set(pathList))
-
     #----------------------------------------------------------------------
     def sumNet(self,filePathList):
         """加总曲线净值"""
@@ -582,6 +474,15 @@ class PostAnalysis(object):
         # print content
         self.logger1.info(content)
 
+    def string_toDatetime(self, string):
+        """把字符串转成datetime"""
+        return datetime.strptime(string, "%Y%m%d")
+
+    def compare_dateTime(self, dateStr1, dateStr2):
+        """两个日期的比较, 当然也可以用timestamep方法比较,都可以实现."""
+        date1 = self.string_toDatetime(dateStr1)
+        date2 = self.string_toDatetime(dateStr2)
+        return date1.date() > date2.date()
 
 class TempTradeData(object):
     def __init__(self,price,volume,offset,direction,tradeTime,symbol):
@@ -599,9 +500,6 @@ def main():
     test.loadLog()
     # test.tradeCacheLoad()
     # test.writeStatement()
-
-
-
 if __name__ == '__main__':
     main()
 
