@@ -56,7 +56,7 @@ class EventSelection(QtGui.QWidget):
         self.setLayout(grid)
 
     def data(self):
-        # print 'data'
+
         LogFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\temp'
         dirName = []
         for i in os.listdir(LogFile):
@@ -65,7 +65,7 @@ class EventSelection(QtGui.QWidget):
         dirName.sort()
         for j in dirName:
             try:
-                self.analysisEngine.loadLog(j)
+                self.analysisEngine.loadLog(j, LogFile)
                 self.mainEngine.dbConnect()
                 lastTickData = self.mainEngine.dbQuery('MTS_lastTick_DB',"20170331",None)
                 self.analysisEngine.loadTradeHolding(lastTickData)

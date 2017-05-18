@@ -41,7 +41,7 @@ class MainEngine(object):
         self.ctaEngine = CtaEngine(self, self.eventEngine)
 
         self.rmEngine = RmEngine(self, self.eventEngine)
-        self.analysisEngine = PostAnalysis()
+        self.analysisEngine = PostAnalysis(self,self.eventEngine)
     #----------------------------------------------------------------------
     def initGateway(self):
         """初始化接口对象"""

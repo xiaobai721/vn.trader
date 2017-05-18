@@ -26,16 +26,9 @@ from vtConstant import *
 class PostAnalysis(object):
     """日志拆分分析"""
 
-    ctaEngineLogFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\ctaLogFile\\temp'
-    # ctaEngineTradeCacheFile = os.getcwd() + '/tradeCache'
     ctaSettingFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir, os.pardir)) + 'vn.trader\\algoConfig'
-
-    ctaCurrPosFile = os.path.abspath(os.path.join(os.path.dirname('ctaLogFile'), os.pardir,os.pardir)) + 'vn.trader\\ctaLogFile\\ctaPosFile'
-    # ctaHisPosFile = ctaCurrPosFile + '\\' + 'hisPosFile'
-    # statementFile = os.getcwd() + '/statement'
-
     #---------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, mainEngine, eventEngine):
         """初始化"""
         self.today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         # 单策略log字典
@@ -51,12 +44,6 @@ class PostAnalysis(object):
         self.validateSi = []
 
         self.symbolInformation = {}
-
-        # log 配置
-        if not os.path.exists(self.ctaEngineLogFile):
-            os.makedirs(self.ctaEngineLogFile)
-        with open(self.ctaEngineLogFile+'/ctaLog','ab') as f:
-            pass
 
         self.logger1 = logging.getLogger('statementLogger')
         self.logger1.setLevel(logging.DEBUG)
@@ -78,9 +65,13 @@ class PostAnalysis(object):
             self.symbolInformation[line[0]] = line[1:]
 
     #---------------------------------------------------------------------
-    def loadLog(self,dirname):
+    def loadLog(self,dirname, LogFile):
         """加载log文件"""
         d = dirname
+        self.ctaEngineLogFile = LogFile
+        if not os.path.exists(self.ctaEngineLogFile):
+            os.makedirs(self.ctaEngineLogFile)									 
+											  
         self.tradeList = OrderedDict()
         self.endTime = dirname
         self.sLogdir = ['\AccountInstanceLog','\ContractInstanceLog']
@@ -228,7 +219,7 @@ class PostAnalysis(object):
         """读取交易记录"""
         LTKdata = list(lastPrice)
         try:
-            tradeData = pyexcel_xls.get_data(self.ctaEngineLogFile+'/'+self.endTime+'/'+'ctaTradeList.xls')
+            tradeData = pyexcel_xls.get_data(self.ctaEngineLogFile+'/'+self.endTime+'/'+'ctaTradeList_1.xls')
             ail = tradeData['AccountInstanceLog']
 
         except Exception as e:
@@ -240,7 +231,6 @@ class PostAnalysis(object):
         ail = ail[1:]
         posHolding = [] #记录所有标的持仓信息[InstID,ConID,date,long,short,lastprice,profit]
         IDList = [] #InstID + Conid 作为ID标志
-
         ypos = {} #记录标的前一日posholding
         for line in range(len(ail)):
             InstID = ail[line][-1]
@@ -363,10 +353,11 @@ class PostAnalysis(object):
 
     # ----------------------------------------------------------------------
     def backupHisPos(self):
+        self.ctaHisPosFile = self.ctaEngineLogFile + '/' + 'his'
         if not os.path.exists(self.ctaHisPosFile):
             os.makedirs(self.ctaHisPosFile)
         valList = self.loadCTASetting()
-        for i in os.walk(self.ctaCurrPosFile):
+        for i in os.walk(self.ctaHisPosFile + '/' + 'ctaPosFile'):
             if len(i[-1]) > 0 and 'txt' in i[-1][0]:
                 for j in i[-1] :
                     if j.split('_', 1)[-1][:-4] in valList:
