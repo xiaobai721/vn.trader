@@ -214,6 +214,7 @@ class PostAnalysis(object):
                     continue
                 else:
                     POSFile = POSFile[-i].tolist()
+                    break
         except:
             POSFile = POSFile.tolist()
         return POSFile
