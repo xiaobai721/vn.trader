@@ -201,17 +201,16 @@ class NetCurveManager(QtGui.QDialog):
     # ----------------------------------------------------------------------
 
     def loadAllPosFile(self):
+        """改为实例文件夹bywWang"""
         self.fileName = []
-        for i in os.walk(self.path):
-            if len(i[-1]) > 0 and 'txt' in i[-1][0]:
-                for j in i[-1]:
-                    self.dataList = {}
-                    self.dataList['name'] = j
-                    self.dataList['account'] = j.split('_', 1)[0]
-                    self.dataList['strategy'] = j.split('_', 2)[1]
-                    self.dataList['contract'] = j.split('_', 2)[2][:-4]
-                    self.fileName.append(self.dataList)
-            break
+        for root, dirs, files in os.walk(self.path):
+            for d in dirs:
+                self.dataList = {}
+                self.dataList['name'] = d
+                self.dataList['account'] = d.split('_', 1)[0]
+                self.dataList['strategy'] = d.split('_', 2)[1]
+                self.dataList['contract'] = d.split('_', 2)[2]
+                self.fileName.append(self.dataList)
 
     # ----------------------------------------------------------------------
     def groupByPosFile(self, field):

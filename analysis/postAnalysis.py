@@ -209,7 +209,11 @@ class PostAnalysis(object):
             POSFile = np.array([[conid, '0', 0.0, 0.0, 0.0, 0.0]])
 
         try:
-            POSFile = POSFile[-1].tolist()
+            for i in range(1, len(POSFile)+1):
+                if not self.compare_dateTime(self.endTime[:8], POSFile[-i][1]):
+                    continue
+                else:
+                    POSFile = POSFile[-i].tolist()
         except:
             POSFile = POSFile.tolist()
         return POSFile
@@ -274,7 +278,7 @@ class PostAnalysis(object):
         for i in posHolding:
             trade = self.initTradeList(i[0], i[1], ail)
             TProfit = self.calculateSingeldayCapital(float(ypos[i[0]][i[1]][2]),float(ypos[i[0]][i[1]][3]),trade,float(ypos[i[0]][i[1]][4]),i[5],i[1])
-            i[5] = TProfit
+            i[6] = TProfit
             self.writePosFile(self.endTime,i)
     # ----------------------------------------------------------------------
     def qryLastTick(self,pricedata,conid):
@@ -447,13 +451,20 @@ class PostAnalysis(object):
     #----------------------------------------------------------------------
     def sumNet(self,filePathList):
         """加总曲线净值"""
+        #针对单策略实例多标的的情况，取sum作为实例net
         netDict = {}
         for netf in filePathList:
-            netDict[netf] = {}
-            with open(netf,'rb') as f:
-                temp = f.readlines()
-                for line in temp:
-                    netDict[netf][line.split(',')[1]] = float(line.split(',')[5].strip())
+            InstID = netf.split('\\')[-1]
+            netDict[InstID] = {}
+            files = os.listdir(netf)
+            for file in files:
+                with open(netf + '\\' + file,'rb') as f:
+                    temp = f.readlines()
+                    for line in temp:
+                        if not netDict[InstID].has_key(line.split(',')[1]):
+                            netDict[InstID][line.split(',')[1]] = float(line.split(',')[5].strip())
+                        else:
+                            netDict[InstID][line.split(',')[1]] += float(line.split(',')[5].strip())
 
 
         return netDict
@@ -470,7 +481,7 @@ class PostAnalysis(object):
         return datetime.strptime(string, "%Y%m%d")
 
     def compare_dateTime(self, dateStr1, dateStr2):
-        """两个日期的比较, 当然也可以用timestamep方法比较,都可以实现."""
+        """两个日期的比较"""
         date1 = self.string_toDatetime(dateStr1)
         date2 = self.string_toDatetime(dateStr2)
         return date1.date() > date2.date()

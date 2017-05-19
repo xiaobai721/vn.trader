@@ -73,13 +73,13 @@ class EventSelection(QtGui.QWidget):
             except Exception, e:
                 print e
                 continue
+
+        self.analysisEngine.backupHisPos()
         QtGui.QMessageBox.information(self, u'Information', u'基础数据分析完成!')
 
         self.close()
 
     def net(self):
-        # print 'net'
-        self.analysisEngine.backupHisPos()
 
         if self.radioCurrData.isChecked():
             sign = 'Curr'
