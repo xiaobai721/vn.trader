@@ -205,19 +205,22 @@ class PostAnalysis(object):
             with open(filePath + '\\' + str(conid) + '.txt', 'rb') as f:
                 POSFile = np.loadtxt(f, dtype=personaltype, delimiter=",")
                 f.close()
-        except Exception as e:
-            POSFile = np.array([[conid, '0', 0.0, 0.0, 0.0, 0.0]])
-
-        try:
-            for i in range(1, len(POSFile)+1):
-                if not self.compare_dateTime(self.endTime[:8], POSFile[-i][1]):
-                    continue
+                if POSFile.ndim != 0:
+                    for i in range(1, len(POSFile) + 1):
+                        if not self.compare_dateTime(self.endTime[:8], POSFile[-i][1]):
+                            continue
+                        else:
+                            POSFile1 = POSFile[-i].tolist()
+                            break
                 else:
-                    POSFile = POSFile[-i].tolist()
-                    break
-        except:
-            POSFile = POSFile.tolist()
-        return POSFile
+                    if not self.compare_dateTime(self.endTime[:8], POSFile.tolist()[1]):
+                        pass
+                    else:
+                        POSFile1 = POSFile.tolist()
+            return POSFile1
+        except Exception as e:
+            POSFile1 = [conid, '0', 0.0, 0.0, 0.0, 0.0]
+            return POSFile1
 
     #----------------------------------------------------------------------
     def loadTradeHolding(self,lastPrice):
