@@ -144,15 +144,19 @@ class PostAnalysis(object):
         truncateSign = False
         if os.path.exists(posPath):
             with open(posPath, 'rb') as f:
-                POS = f.readline()
+                POS = f.readlines()
                 if POS:
-                    if not self.compare_dateTime(posHolding[2], POS.split(',')[1]):
-                        truncateSign = True
+                    for k,v in enumerate(POS):
+                        if not self.compare_dateTime(posHolding[2], v.split(',')[1]):
+                            del POS[k:]
+                            truncateSign = True
+                            break
 
         try:
             with open(posPath,'a') as f:
                 if truncateSign:
                     f.truncate()
+                f.writelines(POS)
                 s = ','.join([str(x) for x in posHolding[1:]])
                 f.write( s + '\n')
         except Exception as e:
@@ -266,14 +270,14 @@ class PostAnalysis(object):
                     temp[3] = float(temp[3]) + float(ail[line][7])
                 elif unicode('平',"utf8") in ail[line][6]:
                     # continue
-                    temp[3] = float(temp[3]) - float(ail[line][7])
+                    temp[3] = max(float(temp[3]) - float(ail[line][7]), 0.0)
 
             elif unicode('空',"utf8") in ail[line][5]:
                 if unicode('开仓',"utf8") in ail[line][6]:
                     temp[4] = float(temp[4]) + float(ail[line][7])
                 elif unicode('平',"utf8") in ail[line][6]:
                     # continue
-                    temp[4] = float(temp[4]) - float(ail[line][7])
+                    temp[4] = max(float(temp[4]) - float(ail[line][7]), 0.0)
 
             lastPriceData = self.qryLastTick(LTKdata,ConID)
             temp.append(lastPriceData)
