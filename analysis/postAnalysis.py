@@ -270,14 +270,14 @@ class PostAnalysis(object):
                     temp[3] = float(temp[3]) + float(ail[line][7])
                 elif unicode('平',"utf8") in ail[line][6]:
                     # continue
-                    temp[3] = max(float(temp[3]) - float(ail[line][7]), 0.0)
+                    temp[4] = max(float(temp[4]) - float(ail[line][7]), 0.0)
 
             elif unicode('空',"utf8") in ail[line][5]:
                 if unicode('开仓',"utf8") in ail[line][6]:
                     temp[4] = float(temp[4]) + float(ail[line][7])
                 elif unicode('平',"utf8") in ail[line][6]:
                     # continue
-                    temp[4] = max(float(temp[4]) - float(ail[line][7]), 0.0)
+                    temp[3] = max(float(temp[3]) - float(ail[line][7]), 0.0)
 
             lastPriceData = self.qryLastTick(LTKdata,ConID)
             temp.append(lastPriceData)
@@ -288,6 +288,39 @@ class PostAnalysis(object):
             TProfit = self.calculateSingeldayCapital(float(ypos[i[0]][i[1]][2]),float(ypos[i[0]][i[1]][3]),trade,float(ypos[i[0]][i[1]][4]),i[5],i[1])
             i[6] = TProfit
             self.writePosFile(self.endTime,i)
+        # 今日无交易的标的持仓净值
+        self.processNotTradedPos(posHolding, LTKdata)
+    # ----------------------------------------------------------------------
+    def processNotTradedPos(self,posHolding,LTKdata):
+        """计算持仓盈亏"""
+        filePath = self.ctaEngineLogFile + '\\ctaPosFile'
+        fileList = []
+        for root,dirs,files in os.walk(filePath):
+            for f in files:
+                fileList.append(os.path.join(root,f))
+
+        for f in fileList:
+            sign = False
+            for i in posHolding:
+                InstId = i[0]
+                ConId = i[1]
+                fInstId = f.split('\\')[-2]
+                fConId = f.split('\\')[-1][:-4]
+                if InstId in fInstId and ConId in fConId:
+                    sign = True
+                    break
+
+            if not sign:
+                posNew = []
+                pos = self.loadPosHolding(fInstId, fConId)
+                lastPrice = self.qryLastTick(LTKdata, fConId)
+                TProfit = (pos[2] - pos[3]) * (lastPrice - pos[4])
+                posNew.append(fInstId)
+                posNew.extend(list(pos[:4]))
+                posNew[2] = self.endTime[:8]
+                posNew.extend([lastPrice, TProfit])
+                self.writePosFile(self.endTime, posNew)
+
     # ----------------------------------------------------------------------
     def qryLastTick(self,pricedata,conid):
         try:
