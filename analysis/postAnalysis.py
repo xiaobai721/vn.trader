@@ -314,12 +314,12 @@ class PostAnalysis(object):
                 posNew = []
                 pos = self.loadPosHolding(fInstId, fConId)
                 lastPrice = self.qryLastTick(LTKdata, fConId)
-                TProfit = (pos[2] - pos[3]) * (lastPrice - pos[4])
+                TProfit = self.calculateSingeldayCapital(pos[2], pos[3], None, pos[4], lastPrice, pos[0])
                 posNew.append(fInstId)
                 posNew.extend(list(pos[:4]))
-                posNew[2] = self.endTime[:8]
+                posNew[2] = self.endTime[:8] #修改时间
                 posNew.extend([lastPrice, TProfit])
-                self.writePosFile(self.endTime, posNew)
+                self.writePosFile(self.endTime[:8], posNew)
 
     # ----------------------------------------------------------------------
     def qryLastTick(self,pricedata,conid):
@@ -388,11 +388,10 @@ class PostAnalysis(object):
         if longPos > 0:
             tempC = (currentPrice - previousPrice) * longPos * size
             tempCaptial.append(tempC)
-        elif shortPos > 0:
+        if shortPos > 0:
             tempC = (previousPrice - currentPrice) * shortPos * size
             tempCaptial.append(tempC)
-        else:
-            pass
+
 
         return sum(tempCaptial)
 
